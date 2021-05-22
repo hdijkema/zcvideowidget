@@ -1,0 +1,7 @@
+#ifndef __ZCVIDEOWIDGET_ALL_H
+
+#include <zcvideowidget_global.h>
+#include <zcvideowidget.h>
+#include <zcvideowidgetslider.h>
+
+#endif
