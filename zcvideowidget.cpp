@@ -352,9 +352,6 @@ void zcVideoWidget::mouseMoveEvent(QMouseEvent *event)
     QFrame::mouseMoveEvent(event);
 }
 
-
-
-
 zcVideoWidget::Prefs::~Prefs()
 {
 }

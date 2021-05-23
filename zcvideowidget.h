@@ -21,9 +21,9 @@ public:
     class Prefs {
     public:
         virtual bool get(const QString &key, bool def) = 0;
-        virtual bool get(const QString &key, int def) = 0;
-        virtual bool set(const QString &key, bool v) = 0;
-        virtual bool set(const QString &key, int v) = 0;
+        virtual int  get(const QString &key, int def) = 0;
+        virtual void set(const QString &key, bool v) = 0;
+        virtual void set(const QString &key, int v) = 0;
     public:
         virtual ~Prefs();
     };
