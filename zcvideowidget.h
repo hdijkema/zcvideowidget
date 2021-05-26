@@ -1,3 +1,13 @@
+/*
+ * https://github.com/hdijkema/zcvideowidget
+ *
+ * The zcVideoWidget library provides a simple VideoWidget and Video Dock / Floating window
+ * for Qt applications. It is great to use together with the ffmpeg-plugin for QMultiMedia
+ * See https://github.com/hdijkema/qtmultimedia-plugin-ffmpeg.
+ *
+ * Copyright (C) 2021 Hans Dijkema, License LGPLv3
+ */
+
 #ifndef ZCVIDEOWIDGET_H
 #define ZCVIDEOWIDGET_H
 
@@ -55,28 +65,29 @@ private:
     QLabel              *_movie_name;
     QToolButton         *_close;
 
-    QTimer           _timer;
+    QTimer               _timer;
 
-    bool             _propagate_events;
-    bool             _handle_keys;
+    bool                 _propagate_events;
+    bool                 _handle_keys;
 
-    QPoint           _cur_pos;
-    QSize            _cur_size;
+    QPoint               _cur_pos;
+    QSize                _cur_size;
 
-    QWidget         *_parent;
+    QWidget             *_parent;
 
-    bool             _update_slider;
+    bool                 _update_slider;
 
-    Qt::WindowStates _prev_states;
+    Qt::WindowStates     _prev_states;
 
     QGraphicsTextItem   *_srt_item;
     QGraphicsVideoItem  *_video_item;
     QGraphicsScene      *_scene;
     QGraphicsView       *_view;
-    QFont            _srt_font;
-    QString          _current_srt_text;
+    QFont                _srt_font;
+    QString              _current_srt_text;
 
-    Prefs           *_prefs;
+    Prefs               *_prefs;
+    bool                 _prefs_first;
 
     QVector<struct Srt> _subtitles;
 

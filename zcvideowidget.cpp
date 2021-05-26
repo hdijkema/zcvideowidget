@@ -1,3 +1,13 @@
+/*
+ * https://github.com/hdijkema/zcvideowidget
+ *
+ * The zcVideoWidget library provides a simple VideoWidget and Video Dock / Floating window
+ * for Qt applications. It is great to use together with the ffmpeg-plugin for QMultiMedia
+ * See https://github.com/hdijkema/qtmultimedia-plugin-ffmpeg.
+ *
+ * Copyright (C) 2021 Hans Dijkema, License LGPLv3
+ */
+
 #include "zcvideowidget.h"
 
 #include <QApplication>
@@ -40,6 +50,7 @@ zcVideoWidget::zcVideoWidget(zcVideoWidget::Prefs *p, int flags, QWidget *parent
     _flags = flags;
     _prefs = p;
     _parent = parent;
+    _prefs_first = true;
 
     setAutoFillBackground(true);
     setMouseTracking(true);
@@ -105,8 +116,7 @@ zcVideoWidget::zcVideoWidget(zcVideoWidget::Prefs *p, int flags, QWidget *parent
     _mute = new QToolButton();
     QAction *mute_action = new QAction(st->standardIcon(QStyle::SP_MediaVolumeMuted), tr("Geluid uit"), this);
     mute_action->setCheckable(true);
-    bool muted = (_prefs) ? _prefs->get("zcVideoWidget.muted", false) : false;
-    mute_action->setChecked(muted);
+
     connect(mute_action, &QAction::toggled, this, &zcVideoWidget::mute);
     _mute->setDefaultAction(mute_action);
 
@@ -114,9 +124,8 @@ zcVideoWidget::zcVideoWidget(zcVideoWidget::Prefs *p, int flags, QWidget *parent
     _volume->setRange(0, 100);
     _volume->setTickInterval(5);
     _volume->setSingleStep(5);
-    int vol = (_prefs) ? _prefs->get("zcVideoWidget.volume", 100) : 100;
-    _volume->setValue(vol);
-    _player->setVolume(vol);
+    _volume->setValue(0);
+    _player->setVolume(0);
     connect(_volume, &QSlider::valueChanged, this, &zcVideoWidget::setVolume);
 
     _fullscreen = new QToolButton();
@@ -425,18 +434,20 @@ void zcVideoWidget::sliderReleased()
 
 void zcVideoWidget::mute(bool yes)
 {
-    if (_prefs) { _prefs->set("zcVideoWidget.muted", yes); }
+    QString myname = (objectName() == "") ? "default" : objectName();
+    if (_prefs) { _prefs->set(QString("zcVideoWidget.%1.muted").arg(myname), yes); }
     _player->setMuted(yes);
 }
 
 void zcVideoWidget::setVolume(qint64 v)
 {
-    if (_prefs) { _prefs->set("zcVideoWidget.volume", static_cast<int>(v)); }
+    QString myname = (objectName() == "") ? "default" : objectName();
+    if (_prefs) { _prefs->set(QString("zcVideoWidget.%1.volume").arg(myname), static_cast<int>(v)); }
     _player->setVolume(v);
     if (_player->isMuted()) {
         _mute->setChecked(false);
         _player->setMuted(false);
-        if (_prefs) { _prefs->set("zcVideoWidget.muted", false); }
+        if (_prefs) { _prefs->set(QString("zcVideoWidget.%1.muted").arg(myname), false); }
     }
 }
 
@@ -525,6 +536,26 @@ void zcVideoWidget::adjustSize()
 
 void zcVideoWidget::showEvent(QShowEvent *event)
 {
+    if (_prefs_first) {
+        _prefs_first = false;
+
+        QString myname = (objectName() == "") ? "default" : objectName();
+
+        bool muted = (_prefs) ? _prefs->get(QString("zcVideoWidget.%1.muted").arg(myname), false) : false;
+
+        auto mute_action = _mute->actions().first();
+        bool b = mute_action->blockSignals(true);
+        mute_action->setChecked(muted);
+        mute_action->blockSignals(b);
+
+        int vol = (_prefs) ? _prefs->get(QString("zcVideoWidget.%1.volume").arg(myname), 100) : 100;
+        b= _volume->blockSignals(true);
+        _volume->setValue(vol);
+        _volume->blockSignals(b);
+
+        _player->setVolume(vol);
+    }
+
     adjustSize();
     super::showEvent(event);
 }
