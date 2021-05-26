@@ -25,6 +25,7 @@
 #include <QVector>
 #include <QGraphicsVideoItem>
 #include <QGraphicsTextItem>
+#include <QGraphicsView>
 
 #include "zcvideowidgetslider.h"
 #include "zcvideoflags.h"
@@ -150,6 +151,7 @@ protected:
 private:
     void adjustSize();
     void processSrt(int pos_in_ms);
+    void doFullScreen(QWidget *w, bool fscr);
 };
 
 

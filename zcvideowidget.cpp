@@ -19,6 +19,7 @@
 #include <QTime>
 #include <QMouseEvent>
 #include <QMessageBox>
+#include <QMainWindow>
 
 #include <QGraphicsVideoItem>
 #include <QGraphicsTextItem>
@@ -451,27 +452,63 @@ void zcVideoWidget::setVolume(qint64 v)
     }
 }
 
+
+void zcVideoWidget::doFullScreen(QWidget *w, bool fscr)
+{
+    bool mainwin = false;
+#ifdef Q_OS_WIN32
+    QDockWidget *dw = qobject_cast<QDockWidget *>(w);
+    QMainWindow *mw = qobject_cast<QMainWindow *>(w);
+    mainwin = (mw != nullptr) || (dw != nullptr);
+#else
+    QMainWindow *mw = qobject_cast<QMainWindow *>(w);
+    mainwin = (mw != nullptr);
+#endif
+    if (mainwin) {
+        if (fscr) {
+            _prev_states = w->windowState();
+            w->setWindowState(Qt::WindowFullScreen);
+        } else {
+            w->setWindowState(_prev_states);
+        }
+    } else {
+        if (fscr) {
+            QScreen *scr = QApplication::primaryScreen();
+            QSize s(w->size());
+            QPoint p(w->pos());
+            w->setProperty("zcvideowidget.prevsize", s);
+            w->setProperty("zcvideowidget.prevpos", p);
+            w->move(0, 0);
+            w->resize(scr->size());
+        } else {
+            QSize s(w->property("zcvideowidget.prevsize").toSize());
+            QPoint p(w->property("zcvideowidget.prevpos").toPoint());
+            w->move(p);
+            w->resize(s);
+        }
+    }
+}
+
+
 void zcVideoWidget::fullScreen(bool fscr)
 {
     if (fscr) {
         if (_flags&zcVideoFlags::FLAG_DOCKED) {
             zcVideoDock *w = qobject_cast<zcVideoDock *>(parent());
             if (w) {
-                _prev_states = w->windowState();
-                w->setWindowState(Qt::WindowFullScreen);
+                doFullScreen(w, fscr);
             }
         } else {
-            _prev_states = this->windowState();
-            this->setWindowState(Qt::WindowFullScreen);
+            doFullScreen(this, fscr);
         }
     } else {
         if (_flags&zcVideoFlags::FLAG_DOCKED) {
             zcVideoDock *w = qobject_cast<zcVideoDock *>(parent());
             if (w) {
-                w->setWindowState(_prev_states);
+                doFullScreen(w, fscr);
             }
         } else {
-            this->setWindowState(_prev_states);
+            doFullScreen(this, fscr);
         }
     }
 
