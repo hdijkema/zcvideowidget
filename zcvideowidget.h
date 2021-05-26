@@ -11,12 +11,24 @@
 #include <QFrame>
 #include <QLabel>
 #include <QTimer>
+#include <QFile>
+#include <QVector>
+#include <QGraphicsVideoItem>
+#include <QGraphicsTextItem>
 
 #include "zcvideowidgetslider.h"
+#include "zcvideoflags.h"
 
-class ZCVIDEOWIDGET_EXPORT zcVideoWidget : public QFrame
+class ZCVIDEOWIDGET_EXPORT zcVideoWidget : public QWidget
 {
     Q_OBJECT
+private:
+    struct Srt {
+        int     from_ms;
+        int     to_ms;
+        QString subtitle;
+    };
+
 public:
     class Prefs {
     public:
@@ -25,9 +37,11 @@ public:
         virtual void set(const QString &key, bool v) = 0;
         virtual void set(const QString &key, int v) = 0;
     public:
-        virtual ~Prefs();
+        virtual ~Prefs() {}
     };
+
 private:
+    int                  _flags;
     QMediaPlayer        *_player;
     QVideoWidget        *_video_widget;
     zcVideoWidgetSlider *_slider;
@@ -55,16 +69,32 @@ private:
 
     Qt::WindowStates _prev_states;
 
+    QGraphicsTextItem   *_srt_item;
+    QGraphicsVideoItem  *_video_item;
+    QGraphicsScene      *_scene;
+    QGraphicsView       *_view;
+    QFont            _srt_font;
+    QString          _current_srt_text;
+
     Prefs           *_prefs;
+
+    QVector<struct Srt> _subtitles;
 
 public:
     // Prefs will be owned and destoyed by this widget
-    explicit zcVideoWidget(QWidget *parent);
+    explicit zcVideoWidget(QWidget *parent = nullptr);
+    explicit zcVideoWidget(int flags, QWidget *parent = nullptr);
     explicit zcVideoWidget(Prefs *p, QWidget *parent = nullptr);
+    explicit zcVideoWidget(Prefs *p, int flags, QWidget *parent = nullptr);
     ~zcVideoWidget();
 
 public:
-    void setVideo(const QUrl &video_url, bool play);
+    void setVideo(const QUrl &video_url, bool play, const QString &title = "@@URL@@");
+
+public:
+    bool setSrt(const QFile &file);
+    void clearSrt();
+    void setSrtText(const QString &html_text);
 
 public:
     void move(const QPoint &p);
@@ -92,6 +122,7 @@ private slots:
     void setVolume(qint64 v);
     void fullScreen(bool yes);
     void mediaStateChanged(QMediaPlayer::MediaStatus st);
+    void mediaChanged(const QMediaContent &c);
 
     // QWidget interface
 protected:
@@ -101,6 +132,13 @@ protected:
     virtual void enterEvent(QEvent *event) override;
     virtual void leaveEvent(QEvent *event) override;
     virtual void keyReleaseEvent(QKeyEvent *event) override;
+    virtual void closeEvent(QCloseEvent *event) override;
+    virtual void showEvent(QShowEvent *event) override;
+    virtual void resizeEvent(QResizeEvent *event) override;
+
+private:
+    void adjustSize();
+    void processSrt(int pos_in_ms);
 };
 
 

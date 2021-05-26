@@ -11,6 +11,7 @@ zcVideoWidgetSlider::zcVideoWidgetSlider(QWidget *parent)
 zcVideoWidgetSlider::zcVideoWidgetSlider(Qt::Orientation o, QWidget *parent)
     : QSlider(o, parent)
 {
+    this->setTracking(false);
 }
 
 void zcVideoWidgetSlider::mouseReleaseEvent(QMouseEvent *event)

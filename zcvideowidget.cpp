@@ -10,28 +10,65 @@
 #include <QMouseEvent>
 #include <QMessageBox>
 
+#include <QGraphicsVideoItem>
+#include <QGraphicsTextItem>
+#include <QGraphicsScene>
+#include <QGraphicsView>
+#include <QGraphicsDropShadowEffect>
+#include <QTextDocument>
+
+#include "zcvideodock.h"
+#include "srtparser.h"
+
+typedef QWidget super;
+
 zcVideoWidget::zcVideoWidget(QWidget *parent)
   : zcVideoWidget(nullptr, parent)
-{
-}
+{}
 
-zcVideoWidget::zcVideoWidget(Prefs *p, QWidget *parent) : QFrame(parent)
+zcVideoWidget::zcVideoWidget(int flags, QWidget *parent)
+    : zcVideoWidget(nullptr, flags, parent)
+{}
+
+zcVideoWidget::zcVideoWidget(zcVideoWidget::Prefs *p, QWidget *parent)
+    : zcVideoWidget(p, 0, parent)
+{}
+
+zcVideoWidget::zcVideoWidget(zcVideoWidget::Prefs *p, int flags, QWidget *parent)
+    : QWidget(parent)
 {
+    _flags = flags;
     _prefs = p;
     _parent = parent;
 
-    setWindowFlags(Qt::Window|Qt::FramelessWindowHint);
     setAutoFillBackground(true);
-    setFrameShape(QFrame::StyledPanel);
     setMouseTracking(true);
 
     _propagate_events = false;
     _handle_keys = true;
 
-    _player = new QMediaPlayer(this);
+    _player = new QMediaPlayer(this, QMediaPlayer::VideoSurface);
+    _player->setNotifyInterval(200);
 
-    _video_widget = new QVideoWidget(this);
-    _player->setVideoOutput(_video_widget);
+    _video_widget = nullptr; //new QVideoWidget(this); //new zcQVideoWidget(this);
+
+    _video_item = new QGraphicsVideoItem();
+    _player->setVideoOutput(_video_item);
+
+    _srt_item = new QGraphicsTextItem();
+    QGraphicsDropShadowEffect *e2 = new QGraphicsDropShadowEffect(this);
+    e2->setOffset(1,1);
+    _srt_item->setGraphicsEffect(e2);
+
+    _view = new QGraphicsView(this);
+    _scene = new QGraphicsScene();
+    _view->setScene(_scene);
+
+    _scene->addItem(_video_item);
+    _scene->addItem(_srt_item);
+
+    _view->setBackgroundBrush(QBrush(Qt::black));
+
     _slider = new zcVideoWidgetSlider(Qt::Horizontal, this);
     _time = new QLabel(this);
     _update_slider = true;
@@ -42,10 +79,11 @@ zcVideoWidget::zcVideoWidget(Prefs *p, QWidget *parent) : QFrame(parent)
     connect(_player, &QMediaPlayer::durationChanged, this, &zcVideoWidget::setDuration);
     connect(_player, &QMediaPlayer::positionChanged, this, &zcVideoWidget::setPosition);
     connect(_player, &QMediaPlayer::mediaStatusChanged, this, &zcVideoWidget::mediaStateChanged);
+    connect(_player, &QMediaPlayer::currentMediaChanged, this, &zcVideoWidget::mediaChanged);
 
     connect(_slider, &QSlider::sliderPressed, this, &zcVideoWidget::sliderPressed);
     connect(_slider, &QSlider::sliderMoved, this, &zcVideoWidget::showPositionChange);
-    //connect(_slider, &QSlider::valueChanged, this, &zcVideoWidget::seekPosition);
+    connect(_slider, &QSlider::valueChanged, this, &zcVideoWidget::seekPosition);
     connect(_slider, &QSlider::sliderReleased, this, &zcVideoWidget::sliderReleased);
 
     connect(&_timer, &QTimer::timeout, _slider_time, &QLabel::hide);
@@ -87,12 +125,6 @@ zcVideoWidget::zcVideoWidget(Prefs *p, QWidget *parent) : QFrame(parent)
     connect(fullscr_action, &QAction::toggled, this, &zcVideoWidget::fullScreen);
     _fullscreen->setDefaultAction(fullscr_action);
 
-    _movie_name = new QLabel(this);
-    _close = new QToolButton();
-    QAction *close_action = new QAction(st->standardIcon(QStyle::SP_TitleBarCloseButton), tr("Sluiten"), this);
-    connect(close_action, &QAction::triggered, this, &zcVideoWidget::hide);
-    _close->setDefaultAction(close_action);
-
     auto addSep = [this](QHBoxLayout *hbox) {
         QFrame *line = new QFrame(this);
         line->setFrameShape(QFrame::VLine);
@@ -101,9 +133,21 @@ zcVideoWidget::zcVideoWidget(Prefs *p, QWidget *parent) : QFrame(parent)
         hbox->addWidget(line);
     };
 
-    QHBoxLayout *hbox_title = new QHBoxLayout();
-    hbox_title->addWidget(_movie_name, 1);
-    hbox_title->addWidget(_close);
+    QHBoxLayout *hbox_title = nullptr;
+    if (_flags&zcVideoFlags::FLAG_SOFT_TITLE) {
+        _movie_name = new QLabel(this);
+        _close = new QToolButton();
+        QAction *close_action = new QAction(st->standardIcon(QStyle::SP_TitleBarCloseButton), tr("Sluiten"), this);
+        connect(close_action, &QAction::triggered, this, &zcVideoWidget::hide);
+        _close->setDefaultAction(close_action);
+
+        hbox_title = new QHBoxLayout();
+        hbox_title->addWidget(_movie_name, 1);
+        hbox_title->addWidget(_close);
+    } else {
+        _movie_name = nullptr;
+        _close = nullptr;
+    }
 
     QHBoxLayout *hbox = new QHBoxLayout();
     hbox->setSpacing(4);
@@ -118,14 +162,18 @@ zcVideoWidget::zcVideoWidget(Prefs *p, QWidget *parent) : QFrame(parent)
     hbox->addWidget(_fullscreen);
 
     QVBoxLayout *vbox = new QVBoxLayout();
-    vbox->addLayout(hbox_title);
-    vbox->addWidget(_video_widget, 1);
+    if (_flags&zcVideoFlags::FLAG_SOFT_TITLE && hbox_title != nullptr) {
+        vbox->addLayout(hbox_title);
+    }
+    vbox->addWidget(_view, 1);
     vbox->addLayout(hbox);
 
     vbox->setMargin(0);
     vbox->setSpacing(0);
     hbox->setMargin(0);
-    hbox_title->setMargin(0);
+    if (_flags&zcVideoFlags::FLAG_SOFT_TITLE && hbox_title != nullptr) {
+        hbox_title->setMargin(0);
+    }
 
     setLayout(vbox);
 }
@@ -146,12 +194,79 @@ void zcVideoWidget::setHandleKeys(bool yes)
     _handle_keys = yes;
 }
 
-void zcVideoWidget::setVideo(const QUrl &video_url, bool do_play)
+void zcVideoWidget::setVideo(const QUrl &video_url, bool do_play, const QString &_title)
 {
-    _movie_name->setText(video_url.toString());
+    QString title;
+    if (_title == "@@URL@@") { title = video_url.toString(); }
+    else { title = _title; }
+
+    if (_flags&zcVideoFlags::FLAG_SOFT_TITLE) {
+        _movie_name->setText(title);
+    } else {
+        if (_flags&zcVideoFlags::FLAG_DOCKED) {
+            zcVideoDock *w = qobject_cast<zcVideoDock *>(parent());
+            if (w != nullptr) {
+                w->setWindowTitle(title);
+            }
+        }
+    }
     _player->setMedia(video_url);
     if (do_play) { play(); }
     else { pause(); }
+
+    _current_srt_text = "";
+}
+
+bool zcVideoWidget::setSrt(const QFile &file)
+{
+    clearSrt();
+
+    if (file.exists()) {
+        SubtitleParserFactory *subParserFactory = new SubtitleParserFactory(file.fileName().toStdString());
+        SubtitleParser *parser = subParserFactory->getParser();
+        std::vector<SubtitleItem*> sub = parser->getSubtitles();
+        foreach(SubtitleItem *item, sub) {
+            struct Srt srt;
+            srt.from_ms = item->getStartTime();
+            srt.to_ms = item->getEndTime();
+            srt.subtitle = QString::fromStdString(item->getText()).trimmed();
+            _subtitles.append(srt);
+        }
+        delete parser;
+        delete subParserFactory;
+        return true;
+    } else {
+        qWarning() << __FUNCTION__ << __LINE__ << file.fileName() << " does not exist";
+        return false;
+    }
+}
+
+void zcVideoWidget::clearSrt()
+{
+    setSrtText("");
+    _subtitles.clear();
+}
+
+void zcVideoWidget::setSrtText(const QString &html_text)
+{
+    QString objn = objectName();
+    if (objn == "") { objn = "default"; }
+    QString name = QString("zcVideoWidget.%1").arg(objn);
+
+    QTextOption option = _srt_item->document()->defaultTextOption();
+    option.setAlignment(Qt::AlignCenter);
+    _srt_item->document()->setDefaultTextOption(option);
+
+    int fontsize_pt = 12;
+    if (_prefs) {
+        fontsize_pt = _prefs->get(QString("%1.fontsize").arg(name), 20);
+    }
+
+    _srt_item->setDefaultTextColor(Qt::white);
+    QString txt = QString("<span style=\"font-size: %1pt;\">%2</span>").arg(QString::number(fontsize_pt), html_text);
+    _srt_item->setHtml(txt);
+
+    _current_srt_text = html_text;
 }
 
 void zcVideoWidget::move(const QPoint &p)
@@ -160,7 +275,7 @@ void zcVideoWidget::move(const QPoint &p)
     if (_parent != nullptr) {
         pp = _parent->mapToGlobal(p);
     }
-    QFrame::move(pp);
+    super::move(pp);
 }
 
 void zcVideoWidget::hideEvent(QHideEvent *)
@@ -188,8 +303,41 @@ void zcVideoWidget::setDuration(qint64 duration)
     _slider->setRange(0, duration);
     _slider->setSingleStep(duration / 20);
     _slider->setTickInterval(duration / 20);
-    //_slider->setTickPosition(QSlider::TicksBothSides);
     _slider->blockSignals(b);
+}
+
+void zcVideoWidget::processSrt(int pos_in_ms)
+{
+    auto in_srt = [this](int ms) {
+        auto lower = std::lower_bound(_subtitles.begin(), _subtitles.end(), ms, [](const struct Srt &srt, int ms) {
+            return srt.to_ms < ms;
+        });
+        if (lower != _subtitles.end()) {
+            return *lower;
+        } else {
+            struct Srt s { -1, -1, "" };
+            return s;
+        }
+    };
+
+    auto is_valid_srt = [](const struct Srt &srt) {
+        return srt.from_ms >= 0 && srt.to_ms >= 0;
+    };
+
+    struct Srt s = in_srt(pos_in_ms);
+
+    if (!is_valid_srt(s) && _current_srt_text != "") {
+        setSrtText("");
+    } if (is_valid_srt(s)) {
+        if (pos_in_ms <= s.to_ms && pos_in_ms >= s.from_ms) {
+            if (_current_srt_text != s.subtitle) {
+                adjustSize();
+                setSrtText(s.subtitle);
+            }
+        } else if (_current_srt_text != "") {
+            setSrtText("");
+        }
+    }
 }
 
 void zcVideoWidget::setPosition(qint64 pos)
@@ -204,6 +352,12 @@ void zcVideoWidget::setPosition(qint64 pos)
         QString tm_s = QString::asprintf("%02d:%02d:%02d", tm.hour(), tm.minute(), tm.second());
         _time->setText(tm_s);
     }
+
+    processSrt(pos);
+}
+
+void zcVideoWidget::mediaChanged(const QMediaContent &)
+{
 }
 
 void zcVideoWidget::mediaStateChanged(QMediaPlayer::MediaStatus st)
@@ -265,7 +419,6 @@ void zcVideoWidget::sliderPressed()
 void zcVideoWidget::sliderReleased()
 {
     _update_slider = true;
-    seekPosition(_slider->value());
     _timer.setSingleShot(true);
     _timer.start(500);
 }
@@ -290,19 +443,38 @@ void zcVideoWidget::setVolume(qint64 v)
 void zcVideoWidget::fullScreen(bool fscr)
 {
     if (fscr) {
-        _prev_states = this->windowState();
-        this->setWindowState(Qt::WindowFullScreen);
+        if (_flags&zcVideoFlags::FLAG_DOCKED) {
+            zcVideoDock *w = qobject_cast<zcVideoDock *>(parent());
+            if (w) {
+                _prev_states = w->windowState();
+                w->setWindowState(Qt::WindowFullScreen);
+            }
+        } else {
+            _prev_states = this->windowState();
+            this->setWindowState(Qt::WindowFullScreen);
+        }
     } else {
-        this->setWindowState(_prev_states);
+        if (_flags&zcVideoFlags::FLAG_DOCKED) {
+            zcVideoDock *w = qobject_cast<zcVideoDock *>(parent());
+            if (w) {
+                w->setWindowState(_prev_states);
+            }
+        } else {
+            this->setWindowState(_prev_states);
+        }
     }
+
+    adjustSize();
 }
+
+
 
 void zcVideoWidget::enterEvent(QEvent *event)
 {
     if (_propagate_events) {
         releaseMouse();
     }
-    QFrame::enterEvent(event);
+    super::enterEvent(event);
 }
 
 void zcVideoWidget::leaveEvent(QEvent *event)
@@ -310,7 +482,7 @@ void zcVideoWidget::leaveEvent(QEvent *event)
     if (_propagate_events) {
         grabMouse();
     }
-    QFrame::leaveEvent(event);
+    super::leaveEvent(event);
 }
 
 void zcVideoWidget::keyReleaseEvent(QKeyEvent *event)
@@ -320,7 +492,47 @@ void zcVideoWidget::keyReleaseEvent(QKeyEvent *event)
             hide();
         }
     }
-    QFrame::keyReleaseEvent(event);
+    super::keyReleaseEvent(event);
+}
+
+void zcVideoWidget::closeEvent(QCloseEvent *event)
+{
+    hide();
+    super::closeEvent(event);
+}
+
+void zcVideoWidget::adjustSize()
+{
+    QRect r(_view->viewport()->rect());
+    _scene->setSceneRect(r);
+    _video_item->setSize(r.size());
+
+    setSrtText(_current_srt_text);
+
+    int width = r.size().width();
+    _srt_item->setTextWidth(width);
+
+    int height = r.size().height();
+    int bheight = _srt_item->boundingRect().height();
+
+    int h = height - bheight * 2;
+    int hh = height - (0.1 * height);
+    if (h > hh) { h = hh; }
+    if ((height - bheight) < h) { h = height - (bheight * 1.25); }
+
+    _srt_item->setPos(0, h);
+}
+
+void zcVideoWidget::showEvent(QShowEvent *event)
+{
+    adjustSize();
+    super::showEvent(event);
+}
+
+void zcVideoWidget::resizeEvent(QResizeEvent *event)
+{
+    super::resizeEvent(event);
+    adjustSize();
 }
 
 void zcVideoWidget::mouseReleaseEvent(QMouseEvent *evt)
@@ -334,7 +546,7 @@ void zcVideoWidget::mouseReleaseEvent(QMouseEvent *evt)
         }
     }
 
-    QFrame::mouseReleaseEvent(evt);
+    super::mouseReleaseEvent(evt);
 }
 
 void zcVideoWidget::mouseMoveEvent(QMouseEvent *event)
@@ -349,9 +561,6 @@ void zcVideoWidget::mouseMoveEvent(QMouseEvent *event)
         }
     }
 
-    QFrame::mouseMoveEvent(event);
+    super::mouseMoveEvent(event);
 }
 
-zcVideoWidget::Prefs::~Prefs()
-{
-}

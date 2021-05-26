@@ -3,10 +3,12 @@
 
 #include <QtCore/qglobal.h>
 
+
 #if defined(ZCVIDEOWIDGET_LIBRARY)
 #  define ZCVIDEOWIDGET_EXPORT Q_DECL_EXPORT
 #else
 #  define ZCVIDEOWIDGET_EXPORT Q_DECL_IMPORT
 #endif
+
 
 #endif // ZCVIDEOWIDGET_GLOBAL_H

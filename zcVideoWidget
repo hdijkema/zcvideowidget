@@ -2,6 +2,7 @@
 
 #include <zcvideowidget_global.h>
 #include <zcvideowidget.h>
+#include <zcvideodock.h>
 #include <zcvideowidgetslider.h>
 
 #endif
