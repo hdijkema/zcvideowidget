@@ -602,10 +602,9 @@ const uint ES_SYSTEM_REQUIRED = 0x00000001;
 const uint ES_DISPLAY_REQUIRED = 0x00000002;
 #endif
 
-static void setFunction(void **f, void *g)
-{
-    *f = g;
-}
+#ifdef Q_OS_MAC
+#import <IOKit/pwr_mgt/IOPMLib.h>
+#endif
 
 static void preventSleep(QWidget *w, bool yes)
 {
@@ -613,15 +612,17 @@ static void preventSleep(QWidget *w, bool yes)
 
 #ifdef Q_OS_WIN
     if (SetThreadExecutionState == nullptr) {
+        auto setf = [](void **f, void *g) { *f = g; }
         QLibrary lib("kernel32.dll");
-        setFunction(reinterpret_cast<void **>(&SetThreadExecutionState), reinterpret_cast<void *>(lib.resolve("SetThreadExecutionState")));
+        setf(reinterpret_cast<void **>(&SetThreadExecutionState), reinterpret_cast<void *>(lib.resolve("SetThreadExecutionState")));
     }
 
     if (yes) {
         uint previous_state = SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
-        w->setProperty("zcvideowidget.preventsleep", previous_state);
         if (previous_state == 0) {
             qWarning() << __FUNCTION__ << __LINE__ << "SetThreadExecutionState failed.";
+        } else {
+            w->setProperty("zcvideowidget.preventsleep", previous_state);
         }
     } else {
         QVariant prev_st = w->property("zcvideowidget.preventsleep");
@@ -629,6 +630,33 @@ static void preventSleep(QWidget *w, bool yes)
             uint previous_state = w->property("zcvideowidget.preventsleep").toUInt();
             SetThreadExecutionState(previous_state);
             w->setProperty("zcvideowidget.preventsleep", QVariant());
+        }
+    }
+#endif
+#ifdef Q_OS_MAC
+    if (yes) {
+        QString reason = QObject::tr("Een video aan het afspelen.");
+        reason.toCFString();
+        CFStringRef reasonForActivity = reason.toCFString();
+
+        IOPMAssertionID assertionID;
+        IOReturn success = IOPMAssertionCreateWithName(kIOPMAssertionTypeNoDisplaySleep,
+                                                        kIOPMAssertionLevelOn, reasonForActivity, &assertionID);
+        if (success == kIOReturnSuccess) {
+            QVariant v(static_cast<uint32_t>(assertionID));
+            w->setProperty("zcvideowidget.preventsleep", v);
+        } else {
+            qWarning() << __FUNCTION__ << __LINE__ << "IOPMAssertionCreateWithName failed.";
+        }
+    } else {
+        QVariant v = w->property("zcvideowidget.preventsleep");
+        if (v.isValid()) {
+            IOPMAssertionID assertionID = static_cast<IOPMAssertionID>(v.toUInt());
+            IOReturn success = IOPMAssertionRelease(assertionID);
+            w->setProperty("zcvideowidget.preventsleep", QVariant());
+            if (success != kIOReturnSuccess) {
+                qWarning() << __FUNCTION__ << __LINE__ << "IOPMAssertionRelease failed.";
+            }
         }
     }
 #endif
