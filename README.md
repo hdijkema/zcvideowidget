@@ -4,7 +4,7 @@ zcVideoWidget is a library that provides a QVideoWidget with controls.
 
 ## Has following features
 
-* Floating window.
+* Can be used as widget and as floating window (using zcVideoDock).
 * Storing preferences in via a support class.
 * SubRip subtitles (.srt files).
 * Full Screen mode when used in a zcVideoDock.
