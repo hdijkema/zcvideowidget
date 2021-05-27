@@ -11,23 +11,26 @@
 #ifndef ZCVIDEODOCK_H
 #define ZCVIDEODOCK_H
 
-#include <QDockWidget>
+#include "zcvideowidget_global.h"
+#include <QMainWindow>
 #include "zcvideowidget.h"
-#include "zcvideoflags.h"
 
-class ZCVIDEOWIDGET_EXPORT zcVideoDock : public QDockWidget
+class zcVideoDockData;
+
+class ZCVIDEOWIDGET_EXPORT zcVideoDock : public QMainWindow
 {
     Q_OBJECT
 private:
-    zcVideoWidget           *_video_widget;
-    zcVideoWidget::Prefs    *_prefs; // will be owned and deleted by zcVideoWidget
-    int                      _flags;
+    zcVideoDockData         *D;
 
 public:
     explicit zcVideoDock(zcVideoWidget::Prefs *p, int flags, QWidget *parent = nullptr, Qt::WindowFlags wflags = Qt::WindowFlags());
     explicit zcVideoDock(zcVideoWidget::Prefs *p, QWidget *parent = nullptr, Qt::WindowFlags wflags = Qt::WindowFlags());
     explicit zcVideoDock(int flags, QWidget *parent = nullptr, Qt::WindowFlags wflags = Qt::WindowFlags());
     explicit zcVideoDock(QWidget *parent = nullptr, Qt::WindowFlags wflags = Qt::WindowFlags());
+    // zcVideoWidget::Prefs *p will be owned and deleted by the underlying zcVideoWidget
+
+    ~zcVideoDock();
 
 public:
     bool hasPositionAndSize();

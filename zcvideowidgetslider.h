@@ -13,7 +13,6 @@
 
 #include "zcvideowidget_global.h"
 #include <QSlider>
-#include <QWidget>
 
 class ZCVIDEOWIDGET_EXPORT zcVideoWidgetSlider : public QSlider
 {

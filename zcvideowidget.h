@@ -12,34 +12,18 @@
 #define ZCVIDEOWIDGET_H
 
 #include "zcvideowidget_global.h"
-
-#include <QWidget>
-#include <QMediaPlayer>
-#include <QVideoWidget>
-#include <QSlider>
-#include <QToolButton>
-#include <QFrame>
-#include <QLabel>
-#include <QTimer>
-#include <QFile>
-#include <QVector>
-#include <QGraphicsVideoItem>
-#include <QGraphicsTextItem>
-#include <QGraphicsView>
-
-#include "zcvideowidgetslider.h"
 #include "zcvideoflags.h"
+#include <QWidget>
+#include <QFile>
+#include <QMediaPlayer>
+#include <QMediaContent>
+
+class zcVideoWidgetData;
+class zcGraphicsView;
 
 class ZCVIDEOWIDGET_EXPORT zcVideoWidget : public QWidget
 {
     Q_OBJECT
-private:
-    struct Srt {
-        int     from_ms;
-        int     to_ms;
-        QString subtitle;
-    };
-
 public:
     class Prefs {
     public:
@@ -52,45 +36,7 @@ public:
     };
 
 private:
-    int                  _flags;
-    QMediaPlayer        *_player;
-    QVideoWidget        *_video_widget;
-    zcVideoWidgetSlider *_slider;
-    QToolButton         *_play;
-    QToolButton         *_pause;
-    QLabel              *_time;
-    QLabel              *_slider_time;
-    zcVideoWidgetSlider *_volume;
-    QToolButton         *_mute;
-    QToolButton         *_fullscreen;
-    QLabel              *_movie_name;
-    QToolButton         *_close;
-
-    QTimer               _timer;
-
-    bool                 _propagate_events;
-    bool                 _handle_keys;
-
-    QPoint               _cur_pos;
-    QSize                _cur_size;
-
-    QWidget             *_parent;
-
-    bool                 _update_slider;
-
-    Qt::WindowStates     _prev_states;
-
-    QGraphicsTextItem   *_srt_item;
-    QGraphicsVideoItem  *_video_item;
-    QGraphicsScene      *_scene;
-    QGraphicsView       *_view;
-    QFont                _srt_font;
-    QString              _current_srt_text;
-
-    Prefs               *_prefs;
-    bool                 _prefs_first;
-
-    QVector<struct Srt> _subtitles;
+    zcVideoWidgetData   *D;
 
 public:
     // Prefs will be owned and destoyed by this widget
@@ -107,6 +53,10 @@ public:
     bool setSrt(const QFile &file);
     void clearSrt();
     void setSrtText(const QString &html_text);
+
+    void subtitleEarlier(int by_ms);
+    void subtitleLater(int by_ms);
+    void subtitleOnTime();
 
 public:
     void move(const QPoint &p);
@@ -135,6 +85,10 @@ private slots:
     void fullScreen(bool yes);
     void mediaStateChanged(QMediaPlayer::MediaStatus st);
     void mediaChanged(const QMediaContent &c);
+    void clearDelayNotification();
+    void blankCursorOnView();
+    void hideControls();
+    void showControls();
 
     // QWidget interface
 protected:
@@ -152,6 +106,10 @@ private:
     void adjustSize();
     void processSrt(int pos_in_ms);
     void doFullScreen(QWidget *w, bool fscr);
+    void notifySubtitleDelay();
+    void mouseAt(QPoint p);
+
+    friend zcGraphicsView;
 };
 
 

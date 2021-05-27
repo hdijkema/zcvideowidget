@@ -10,12 +10,52 @@
 
 #include "zcvideodock.h"
 
+typedef QMainWindow     super;
+
+class zcVideoDockData
+{
+public:
+    zcVideoWidget           *_video_widget;
+    zcVideoWidget::Prefs    *_prefs;            // will be owned and deleted by zcVideoWidget
+    int                      _flags;
+};
+
 zcVideoDock::zcVideoDock(QWidget *parent, Qt::WindowFlags wflags)
     : zcVideoDock(nullptr, 0, parent, wflags)
+{
+}
+
+zcVideoDock::zcVideoDock(zcVideoWidget::Prefs *p, QWidget *parent, Qt::WindowFlags wflags)
+    : zcVideoDock(p, 0, parent, wflags)
 {}
+
+zcVideoDock::zcVideoDock(int flags, QWidget *parent, Qt::WindowFlags wflags)
+    : zcVideoDock(nullptr, flags, parent, wflags)
+{}
+
+zcVideoDock::zcVideoDock(zcVideoWidget::Prefs *p, int flags, QWidget *parent, Qt::WindowFlags wflags)
+    : QMainWindow(parent, wflags)
+{
+    D = new zcVideoDockData();
+
+    D->_flags = flags;
+    D->_prefs = p;
+    D->_video_widget = new zcVideoWidget(p, flags|zcVideoFlags::FLAG_DOCKED, this);
+
+    setCentralWidget(D->_video_widget);
+}
+
+
+zcVideoDock::~zcVideoDock()
+{
+    delete D->_video_widget;
+    delete D;
+}
+
 
 bool zcVideoDock::hasPositionAndSize()
 {
+    zcVideoWidget::Prefs *_prefs = D->_prefs;
     if (_prefs == nullptr) {
         return false;
     } else {
@@ -32,32 +72,15 @@ bool zcVideoDock::hasPositionAndSize()
     }
 }
 
-zcVideoDock::zcVideoDock(zcVideoWidget::Prefs *p, QWidget *parent, Qt::WindowFlags wflags)
-    : zcVideoDock(p, 0, parent, wflags)
-{}
-
-zcVideoDock::zcVideoDock(int flags, QWidget *parent, Qt::WindowFlags wflags)
-    : zcVideoDock(nullptr, flags, parent, wflags)
-{}
-
-zcVideoDock::zcVideoDock(zcVideoWidget::Prefs *p, int flags, QWidget *parent, Qt::WindowFlags wflags)
-    : QDockWidget(parent, wflags)
-{
-    _prefs = p;
-    _flags = flags;
-    _video_widget = new zcVideoWidget(p, flags|zcVideoFlags::FLAG_DOCKED, this);
-    setWidget(_video_widget);
-}
-
 zcVideoWidget *zcVideoDock::videoWidget()
 {
-    return _video_widget;
+    return D->_video_widget;
 }
 
 void zcVideoDock::setObjectName(const QString &name)
 {
-    QDockWidget::setObjectName(name);
-    _video_widget->setObjectName(name);
+    super::setObjectName(name);
+    D->_video_widget->setObjectName(name);
 }
 
 void zcVideoDock::showEvent(QShowEvent *event)
@@ -65,6 +88,9 @@ void zcVideoDock::showEvent(QShowEvent *event)
     QString objn = objectName();
     if (objn == "") { objn = "default"; }
     QString name = QString("zcVideoDock.%1").arg(objn);
+    zcVideoWidget::Prefs *_prefs = D->_prefs;
+    int _flags = D->_flags;
+
     if (_prefs && _flags&zcVideoFlags::FLAG_KEEP_POSITION_AND_SIZE) {
         int x = _prefs->get(QString("%1.x").arg(name), -1);
         int y = _prefs->get(QString("%1.y").arg(name), -1);
@@ -79,7 +105,8 @@ void zcVideoDock::showEvent(QShowEvent *event)
             resize(s);
         }
     }
-    QDockWidget::showEvent(event);
+
+    super::showEvent(event);
 }
 
 void zcVideoDock::hideEvent(QHideEvent *event)
@@ -87,6 +114,10 @@ void zcVideoDock::hideEvent(QHideEvent *event)
     QString objn = objectName();
     if (objn == "") { objn = "default"; }
     QString name = QString("zcVideoDock.%1").arg(objn);
+
+    zcVideoWidget::Prefs *_prefs = D->_prefs;
+    int _flags = D->_flags;
+
     if (_prefs && _flags&zcVideoFlags::FLAG_KEEP_POSITION_AND_SIZE) {
         QPoint p(pos());
         QSize s(size());
@@ -95,7 +126,8 @@ void zcVideoDock::hideEvent(QHideEvent *event)
         _prefs->set(QString("%1.w").arg(name), s.width());
         _prefs->set(QString("%1.h").arg(name), s.height());
     }
-    QDockWidget::hideEvent(event);
+
+    super::hideEvent(event);
 }
 
 
