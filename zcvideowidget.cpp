@@ -488,6 +488,7 @@ void zcVideoWidget::processSrt(int pos_in_ms)
 
 void zcVideoWidget::setPosition(qint64 pos)
 {
+    //LINE_DEBUG << pos;
     if (D->_update_slider) {
         bool b = D->_slider->blockSignals(true);
         D->_slider->setValue(pos);
@@ -497,6 +498,8 @@ void zcVideoWidget::setPosition(qint64 pos)
         QTime tm(QTime::fromMSecsSinceStartOfDay(t));
         QString tm_s = QString::asprintf("%02d:%02d:%02d", tm.hour(), tm.minute(), tm.second());
         D->_time->setText(tm_s);
+
+        //LINE_DEBUG << pos << t << tm_s;
     }
 
     processSrt(pos);
@@ -612,7 +615,7 @@ static void preventSleep(QWidget *w, bool yes)
 
 #ifdef Q_OS_WIN
     if (SetThreadExecutionState == nullptr) {
-        auto setf = [](void **f, void *g) { *f = g; }
+        auto setf = [](void **f, void *g) { *f = g; };
         QLibrary lib("kernel32.dll");
         setf(reinterpret_cast<void **>(&SetThreadExecutionState), reinterpret_cast<void *>(lib.resolve("SetThreadExecutionState")));
     }
