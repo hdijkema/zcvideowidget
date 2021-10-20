@@ -31,6 +31,7 @@
 #include <QGraphicsDropShadowEffect>
 #include <QTextDocument>
 #include <QLibrary>
+#include <QWindow>
 
 #include <QDebug>
 
@@ -62,6 +63,7 @@ public:
     zcVideoWidgetSlider *_volume;
     QToolButton         *_mute;
     QToolButton         *_fullscreen;
+    bool                 _fullscreen_block;
     QLabel              *_movie_name;
     QToolButton         *_close;
     QWidget             *_controls;
@@ -154,6 +156,33 @@ zcVideoWidget::zcVideoWidget(zcVideoWidget::Prefs *p, int flags, QWidget *parent
     D->_propagate_events = false;
     D->_handle_keys = true;
 
+    // On OSX When the application is in full screen mode,
+    // Playback of video stalls. Don't know why, but
+    // this way we prevent that situation as we remove
+    // the full screen situation.
+    {
+        QWidget *my_w = this->window();
+
+        QWidgetList wl = QApplication::topLevelWidgets();
+        int i, N;
+        for(i = 0, N = wl.size(); i < N; i++) {
+            QWidget *w = wl[i];
+            QMainWindow *mw = qobject_cast<QMainWindow *>(w);
+            if (mw != nullptr) {
+                if (mw->windowState() & Qt::WindowFullScreen) {
+                    Qt::WindowStates st = mw->windowState();
+                    st &= ~Qt::WindowFullScreen;
+                    mw->setWindowState(st);
+
+                    my_w->activateWindow();
+                    my_w->raise();
+
+                    i = N;
+                }
+            }
+        }
+    }
+
     D->_is_fullscreen = false;
 
     D->_player = new QMediaPlayer(this, QMediaPlayer::VideoSurface);
@@ -236,6 +265,7 @@ zcVideoWidget::zcVideoWidget(zcVideoWidget::Prefs *p, int flags, QWidget *parent
 
     D->_srt_delay = 0;
 
+    D->_fullscreen_block = false;
     D->_fullscreen = new QToolButton();
     QAction *fullscr_action = new QAction(st->standardIcon(QStyle::SP_TitleBarMaxButton), tr("Volledig scherm"), this);
     fullscr_action->setCheckable(true);
@@ -488,7 +518,7 @@ void zcVideoWidget::processSrt(int pos_in_ms)
 
 void zcVideoWidget::setPosition(qint64 pos)
 {
-    //LINE_DEBUG << pos;
+    LINE_DEBUG << pos;
     if (D->_update_slider) {
         bool b = D->_slider->blockSignals(true);
         D->_slider->setValue(pos);
@@ -667,15 +697,21 @@ static void preventSleep(QWidget *w, bool yes)
 
 void zcVideoWidget::doFullScreen(QWidget *w, bool fscr)
 {
+    LINE_DEBUG << w << fscr;
+
     bool mainwin = false;
 #ifdef Q_OS_WIN32
     QDockWidget *dw = qobject_cast<QDockWidget *>(w);
     QMainWindow *mw = qobject_cast<QMainWindow *>(w);
     mainwin = (mw != nullptr) || (dw != nullptr);
 #else
+    zcVideoDock *vw = qobject_cast<zcVideoDock *>(w);
     QMainWindow *mw = qobject_cast<QMainWindow *>(w);
-    mainwin = (mw != nullptr);
+    mainwin = (mw != nullptr) && (vw == nullptr);
 #endif
+
+    LINE_DEBUG << mainwin;
+
     if (mainwin) {
         if (fscr) {
             D->_prev_states = w->windowState();
@@ -684,24 +720,49 @@ void zcVideoWidget::doFullScreen(QWidget *w, bool fscr)
             w->setWindowState(D->_prev_states);
         }
     } else {
-        if (fscr) {
-            QScreen *scr = QApplication::primaryScreen();
-            QSize s(w->size());
-            QPoint p(w->pos());
-            w->setProperty("zcvideowidget.prevsize", s);
-            w->setProperty("zcvideowidget.prevpos", p);
-            w->move(0, 0);
-            w->resize(scr->size());
-        } else {
-            QSize s(w->property("zcvideowidget.prevsize").toSize());
-            QPoint p(w->property("zcvideowidget.prevpos").toPoint());
-            w->move(p);
-            w->resize(s);
-        }
-    }
+        // videodock
+        zcVideoDock *vw = qobject_cast<zcVideoDock *>(w);
+        LINE_DEBUG << vw;
+        bool resize = true;
+        if (vw != nullptr) {
+            bool fs = vw->windowState() & Qt::WindowFullScreen;
 
-    if (D->_flags&zcVideoFlags::FLAG_PREVENT_SLEEP_FULLSCREEN) {
-        preventSleep(this, fscr);
+            LINE_DEBUG << vw->windowState() << fs << fscr;
+
+            if (fscr) {
+                if (fs) {
+                    resize = false;
+                }
+            } else {
+                if (fs) {
+                    Qt::WindowStates st = vw->windowState();
+                    LINE_DEBUG << st;
+                    st = st & ~Qt::WindowFullScreen;
+                    LINE_DEBUG << st;
+                    vw->setWindowState(st);
+                    resize = false;
+                }
+            }
+        }
+
+        LINE_DEBUG << vw;
+
+        if (resize) {
+            if (fscr) {
+                QScreen *scr = QApplication::primaryScreen();
+                QSize s(w->size());
+                QPoint p(w->pos());
+                w->setProperty("zcvideowidget.prevsize", s);
+                w->setProperty("zcvideowidget.prevpos", p);
+                w->move(0, 0);
+                w->resize(scr->size());
+            } else {
+                QSize s(w->property("zcvideowidget.prevsize").toSize());
+                QPoint p(w->property("zcvideowidget.prevpos").toPoint());
+                w->move(p);
+                w->resize(s);
+            }
+        }
     }
 }
 
@@ -752,35 +813,60 @@ void zcVideoWidget::clearDelayNotification()
 
 void zcVideoWidget::fullScreen(bool fscr)
 {
+    LINE_DEBUG << fscr << D->_fullscreen_block;
+    if (!D->_fullscreen_block) {
+        fullScreenAct(fscr, true);
+    }
+}
+
+void zcVideoWidget::fullScreenAct(bool fscr, bool act)
+{
+    LINE_DEBUG << fscr << act;
     if (fscr) {
-        if (D->_flags&zcVideoFlags::FLAG_DOCKED) {
-            zcVideoDock *w = qobject_cast<zcVideoDock *>(parent());
-            if (w) {
-                doFullScreen(w, fscr);
+        if (act) {
+            if (D->_flags&zcVideoFlags::FLAG_DOCKED) {
+                zcVideoDock *w = qobject_cast<zcVideoDock *>(parent());
+                LINE_DEBUG << w;
+                if (w) {
+                    doFullScreen(w, fscr);
+                }
+            } else {
+                LINE_DEBUG << this;
+                doFullScreen(this, fscr);
             }
-        } else {
-            doFullScreen(this, fscr);
         }
+
         D->_is_fullscreen = true;
         if (D->_flags&zcVideoFlags::FLAG_HIDE_CONTROLS_FULLSCREEN) {
             D->_control_hide_timer.setSingleShot(true);
             D->_control_hide_timer.start(3000);
         }
+
     } else {
-        if (D->_flags&zcVideoFlags::FLAG_DOCKED) {
-            zcVideoDock *w = qobject_cast<zcVideoDock *>(parent());
-            if (w) {
-                doFullScreen(w, fscr);
+        if (act) {
+            if (D->_flags&zcVideoFlags::FLAG_DOCKED) {
+                zcVideoDock *w = qobject_cast<zcVideoDock *>(parent());
+                LINE_DEBUG << w;
+                if (w) {
+                    doFullScreen(w, fscr);
+                }
+            } else {
+                LINE_DEBUG << this;
+                doFullScreen(this, fscr);
             }
-        } else {
-            doFullScreen(this, fscr);
         }
+
         D->_is_fullscreen = false;
         D->_cursor_timer.stop();
         if (D->_flags&zcVideoFlags::FLAG_HIDE_CONTROLS_FULLSCREEN) {
             D->_control_hide_timer.stop();
             showControls();
         }
+
+    }
+
+    if (D->_flags&zcVideoFlags::FLAG_PREVENT_SLEEP_FULLSCREEN) {
+        preventSleep(this, fscr);
     }
 
     adjustSize();
@@ -868,6 +954,19 @@ void zcVideoWidget::showEvent(QShowEvent *event)
 
     adjustSize();
     super::showEvent(event);
+}
+
+void zcVideoWidget::handleDockChange(bool fscr)
+{
+    LINE_DEBUG << fscr;
+
+    fullScreenAct(fscr, false);
+
+    D->_fullscreen_block = true;
+    if (D->_fullscreen->isChecked() != fscr) {
+        D->_fullscreen->click();
+    }
+    D->_fullscreen_block = false;
 }
 
 void zcVideoWidget::resizeEvent(QResizeEvent *event)
