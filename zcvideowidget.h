@@ -70,6 +70,9 @@ public:
     void lockInput();
     void setHandleKeys(bool yes);
 
+public:
+    void handleDockChange(bool scr);
+
 signals:
     void hidden();
     void clickOutside();
@@ -99,6 +102,9 @@ private slots:
     void hideControls();
     void showControls();
 
+private:
+    void fullScreenAct(bool yes, bool act);
+
     // QWidget interface
 protected:
     virtual void mouseReleaseEvent(QMouseEvent *evt) override;
@@ -123,6 +129,7 @@ private:
     void mouseAt(QPoint p);
 
     friend zcGraphicsView;
+
 };
 
 

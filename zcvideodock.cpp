@@ -9,6 +9,7 @@
  */
 
 #include "zcvideodock.h"
+#include <QEvent>
 
 typedef QMainWindow     super;
 
@@ -128,6 +129,24 @@ void zcVideoDock::hideEvent(QHideEvent *event)
     }
 
     super::hideEvent(event);
+}
+
+void zcVideoDock::changeEvent(QEvent *e)
+{
+    if (e->type() == QEvent::WindowStateChange) {
+        bool fscr;
+        if ((this->windowState() & Qt::WindowFullScreen) != 0) {
+            fscr = true;
+        } else {
+            fscr = false;
+        }
+
+        D->_video_widget->handleDockChange(fscr);
+
+        e->accept();
+    }
+
+
 }
 
 

@@ -45,6 +45,7 @@ public:
 protected:
     virtual void showEvent(QShowEvent *event) override;
     virtual void hideEvent(QHideEvent *event) override;
+    virtual void changeEvent(QEvent *e) override;
 };
 
 
