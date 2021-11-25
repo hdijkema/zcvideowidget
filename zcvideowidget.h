@@ -15,8 +15,13 @@
 #include "zcvideoflags.h"
 #include <QWidget>
 #include <QFile>
+
+#ifdef QT6
+#include <QMediaPlayer>
+#else
 #include <QMediaPlayer>
 #include <QMediaContent>
+#endif
 
 class zcVideoWidgetData;
 class zcGraphicsView;
@@ -84,7 +89,11 @@ private slots:
     void setVolume(qint64 v);
     void fullScreen(bool yes);
     void mediaStateChanged(QMediaPlayer::MediaStatus st);
+#ifdef QT6
+    void mediaChanged(const QUrl &media);
+#else
     void mediaChanged(const QMediaContent &c);
+#endif
     void clearDelayNotification();
     void blankCursorOnView();
     void hideControls();
@@ -95,7 +104,11 @@ protected:
     virtual void mouseReleaseEvent(QMouseEvent *evt) override;
     virtual void mouseMoveEvent(QMouseEvent *event) override;
     virtual void hideEvent(QHideEvent *) override;
+#ifdef QT6
+    virtual void enterEvent(QEnterEvent *event) override;
+#else
     virtual void enterEvent(QEvent *event) override;
+#endif
     virtual void leaveEvent(QEvent *event) override;
     virtual void keyReleaseEvent(QKeyEvent *event) override;
     virtual void closeEvent(QCloseEvent *event) override;

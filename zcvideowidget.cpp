@@ -32,6 +32,10 @@
 #include <QTextDocument>
 #include <QLibrary>
 
+#ifdef QT6
+#include <QAudioOutput>
+#endif
+
 #include <QDebug>
 
 #include "zcvideodock.h"
@@ -156,8 +160,12 @@ zcVideoWidget::zcVideoWidget(zcVideoWidget::Prefs *p, int flags, QWidget *parent
 
     D->_is_fullscreen = false;
 
+#ifdef QT6
+    D->_player = new QMediaPlayer(this);
+#else
     D->_player = new QMediaPlayer(this, QMediaPlayer::VideoSurface);
     D->_player->setNotifyInterval(100);
+#endif
 
     D->_video_item = new QGraphicsVideoItem();
     D->_player->setVideoOutput(D->_video_item);
@@ -192,7 +200,11 @@ zcVideoWidget::zcVideoWidget(zcVideoWidget::Prefs *p, int flags, QWidget *parent
     connect(D->_player, &QMediaPlayer::durationChanged, this, &zcVideoWidget::setDuration);
     connect(D->_player, &QMediaPlayer::positionChanged, this, &zcVideoWidget::setPosition);
     connect(D->_player, &QMediaPlayer::mediaStatusChanged, this, &zcVideoWidget::mediaStateChanged);
+#ifdef QT6
+    connect(D->_player, &QMediaPlayer::sourceChanged, this, &zcVideoWidget::mediaChanged);
+#else
     connect(D->_player, &QMediaPlayer::currentMediaChanged, this, &zcVideoWidget::mediaChanged);
+#endif
 
     connect(D->_slider, &QSlider::sliderPressed, this, &zcVideoWidget::sliderPressed);
     connect(D->_slider, &QSlider::sliderMoved, this, &zcVideoWidget::showPositionChange);
@@ -231,7 +243,7 @@ zcVideoWidget::zcVideoWidget(zcVideoWidget::Prefs *p, int flags, QWidget *parent
     D->_volume->setTickInterval(5);
     D->_volume->setSingleStep(5);
     D->_volume->setValue(0);
-    D->_player->setVolume(0);
+    setVolume(0);
     connect(D->_volume, &QSlider::valueChanged, this, &zcVideoWidget::setVolume);
 
     D->_srt_delay = 0;
@@ -290,11 +302,11 @@ zcVideoWidget::zcVideoWidget(zcVideoWidget::Prefs *p, int flags, QWidget *parent
     vbox->addWidget(D->_view, 1);
     vbox->addWidget(D->_controls);
 
-    vbox->setMargin(0);
     vbox->setSpacing(0);
-    hbox->setMargin(0);
+    vbox->setContentsMargins(0, 0, 0, 0);
+    hbox->setContentsMargins(0, 0, 0, 0);
     if (D->_flags&zcVideoFlags::FLAG_SOFT_TITLE && hbox_title != nullptr) {
-        hbox_title->setMargin(0);
+        hbox_title->setContentsMargins(0, 0, 0, 0);
     }
 
     setLayout(vbox);
@@ -333,7 +345,11 @@ void zcVideoWidget::setVideo(const QUrl &video_url, bool do_play, const QString 
             }
         }
     }
+#ifdef QT6
+    D->_player->setSource(video_url);
+#else
     D->_player->setMedia(video_url);
+#endif
     if (do_play) { play(); }
     else { pause(); }
 
@@ -348,7 +364,7 @@ bool zcVideoWidget::setSrt(const QFile &file)
         SubtitleParserFactory *subParserFactory = new SubtitleParserFactory(file.fileName().toStdString());
         SubtitleParser *parser = subParserFactory->getParser();
         std::vector<SubtitleItem*> sub = parser->getSubtitles();
-        foreach(SubtitleItem *item, sub) {
+        for(SubtitleItem *item : sub) {
             struct Srt srt;
             srt.from_ms = item->getStartTime();
             srt.to_ms = item->getEndTime();
@@ -505,7 +521,11 @@ void zcVideoWidget::setPosition(qint64 pos)
     processSrt(pos);
 }
 
+#ifdef QT6
+void zcVideoWidget::mediaChanged(const QUrl &)
+#else
 void zcVideoWidget::mediaChanged(const QMediaContent &)
+#endif
 {
 }
 
@@ -583,19 +603,39 @@ void zcVideoWidget::mute(bool yes)
 {
     QString myname = (objectName() == "") ? "default" : objectName();
     if (D->_prefs) { D->_prefs->set(QString("zcVideoWidget.%1.muted").arg(myname), yes); }
+#ifdef QT6
+    QAudioOutput *ao = const_cast<QAudioOutput *>(D->_player->audioOutput());
+    if (ao != nullptr) {
+        ao->setMuted(yes);
+    }
+#else
     D->_player->setMuted(yes);
+#endif
 }
 
 void zcVideoWidget::setVolume(qint64 v)
 {
     QString myname = (objectName() == "") ? "default" : objectName();
     if (D->_prefs) { D->_prefs->set(QString("zcVideoWidget.%1.volume").arg(myname), static_cast<int>(v)); }
+
+#ifdef QT6
+    QAudioOutput *ao = const_cast<QAudioOutput *>(D->_player->audioOutput());
+    if (ao != nullptr) {
+        ao->setVolume(v);
+        if (ao->isMuted()) {
+            D->_mute->setChecked(false);
+            ao->setMuted(false);
+            if (D->_prefs) { D->_prefs->set(QString("zcVideoWidget.%1.muted").arg(myname), false); }
+        }
+    }
+#else
     D->_player->setVolume(v);
     if (D->_player->isMuted()) {
         D->_mute->setChecked(false);
         D->_player->setMuted(false);
         if (D->_prefs) { D->_prefs->set(QString("zcVideoWidget.%1.muted").arg(myname), false); }
     }
+#endif
 }
 
 #ifdef Q_OS_WIN
@@ -786,7 +826,11 @@ void zcVideoWidget::fullScreen(bool fscr)
     adjustSize();
 }
 
+#ifdef QT6
+void zcVideoWidget::enterEvent(QEnterEvent *event)
+#else
 void zcVideoWidget::enterEvent(QEvent *event)
+#endif
 {
     if (D->_propagate_events) {
         releaseMouse();
@@ -863,7 +907,7 @@ void zcVideoWidget::showEvent(QShowEvent *event)
         D->_volume->setValue(vol);
         D->_volume->blockSignals(b);
 
-        D->_player->setVolume(vol);
+        setVolume(vol);
     }
 
     adjustSize();

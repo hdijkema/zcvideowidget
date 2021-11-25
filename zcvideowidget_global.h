@@ -20,5 +20,8 @@
 #  define ZCVIDEOWIDGET_EXPORT Q_DECL_IMPORT
 #endif
 
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+#  define QT6
+#endif
 
 #endif // ZCVIDEOWIDGET_GLOBAL_H
