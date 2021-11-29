@@ -35,12 +35,14 @@
 
 #ifdef QT6
 #include <QAudioOutput>
+#include <QMediaDevices>
+#include <QAudioDevice>
 #endif
 
 #include <QDebug>
 
 #include "zcvideodock.h"
-#include "srtparser.h"
+#include "zcvideowidgetsrtparser.h"
 #include "zcvideowidgetslider.h"
 
 #include <QTimer>
@@ -57,6 +59,10 @@ struct Srt {
 
 class zcVideoWidgetData {
 public:
+#ifdef QT6
+    QMediaDevices        _devices;
+    QAudioOutput        *_audio_output;
+#endif
     int                  _flags;
     QMediaPlayer        *_player;
     zcVideoWidgetSlider *_slider;
@@ -198,6 +204,16 @@ zcVideoWidget::zcVideoWidget(zcVideoWidget::Prefs *p, int flags, QWidget *parent
 
     D->_video_item = new QGraphicsVideoItem();
     D->_player->setVideoOutput(D->_video_item);
+
+#ifdef QT6
+    {
+        QAudioDevice ad = QMediaDevices::defaultAudioOutput();
+        D->_audio_output = new QAudioOutput(this);
+        D->_audio_output->setDevice(ad);
+        D->_player->setAudioOutput(D->_audio_output);
+        connect(&D->_devices, &QMediaDevices::audioOutputsChanged, this, &zcVideoWidget::newAudioOutput);
+    }
+#endif
 
     D->_srt_item = new QGraphicsTextItem();
     QGraphicsDropShadowEffect *e2 = new QGraphicsDropShadowEffect(this);
@@ -391,18 +407,18 @@ bool zcVideoWidget::setSrt(const QFile &file)
     clearSrt();
 
     if (file.exists()) {
-        SubtitleParserFactory *subParserFactory = new SubtitleParserFactory(file.fileName().toStdString());
-        SubtitleParser *parser = subParserFactory->getParser();
-        std::vector<SubtitleItem*> sub = parser->getSubtitles();
-        for(SubtitleItem *item : sub) {
+        zcVideoWidgetSrtParser srt_parser;
+        srt_parser.setSrtFile(file);
+
+        int i, N;
+        for(i = 0, N = srt_parser.size(); i < N; i++) {
             struct Srt srt;
-            srt.from_ms = item->getStartTime();
-            srt.to_ms = item->getEndTime();
-            srt.subtitle = QString::fromStdString(item->getText()).trimmed();
+            srt.from_ms = srt_parser.fromMs(i);
+            srt.to_ms = srt_parser.untilMs(i);
+            srt.subtitle = srt_parser.subtitle(i);
             D->_subtitles.append(srt);
         }
-        delete parser;
-        delete subParserFactory;
+
         return true;
     } else {
         qWarning() << __FUNCTION__ << __LINE__ << file.fileName() << " does not exist";
@@ -534,7 +550,7 @@ void zcVideoWidget::processSrt(int pos_in_ms)
 
 void zcVideoWidget::setPosition(qint64 pos)
 {
-    LINE_DEBUG << pos;
+    //LINE_DEBUG << pos;
     if (D->_update_slider) {
         bool b = D->_slider->blockSignals(true);
         D->_slider->setValue(pos);
@@ -558,6 +574,14 @@ void zcVideoWidget::mediaChanged(const QMediaContent &)
 #endif
 {
 }
+
+#ifdef QT6
+void zcVideoWidget::newAudioOutput()
+{
+    QAudioDevice dev = QMediaDevices::defaultAudioOutput();
+    D->_audio_output->setDevice(dev);
+}
+#endif
 
 void zcVideoWidget::mediaStateChanged(QMediaPlayer::MediaStatus st)
 {
@@ -637,6 +661,8 @@ void zcVideoWidget::mute(bool yes)
     QAudioOutput *ao = const_cast<QAudioOutput *>(D->_player->audioOutput());
     if (ao != nullptr) {
         ao->setMuted(yes);
+    } else {
+        LINE_DEBUG << "!! audioOutput() == nullptr!";
     }
 #else
     D->_player->setMuted(yes);
@@ -681,7 +707,7 @@ const uint ES_DISPLAY_REQUIRED = 0x00000002;
 
 static void preventSleep(QWidget *w, bool yes)
 {
-    LINE_DEBUG << w << yes << w->property("zcvideowidget.preventsleep");
+    //LINE_DEBUG << w << yes << w->property("zcvideowidget.preventsleep");
 
 #ifdef Q_OS_WIN
     if (SetThreadExecutionState == nullptr) {

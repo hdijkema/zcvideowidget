@@ -13,15 +13,20 @@
 
 #include <QtCore/qglobal.h>
 
-
-#if defined(ZCVIDEOWIDGET_LIBRARY)
-#  define ZCVIDEOWIDGET_EXPORT Q_DECL_EXPORT
+#ifdef ZCVIDEOWIDGETTEST
+#  define ZCVIDEOWIDGET_EXPORT
 #else
-#  define ZCVIDEOWIDGET_EXPORT Q_DECL_IMPORT
+#  if defined(ZCVIDEOWIDGET_LIBRARY)
+#    define ZCVIDEOWIDGET_EXPORT Q_DECL_EXPORT
+#  else
+#    define ZCVIDEOWIDGET_EXPORT Q_DECL_IMPORT
+#  endif
 #endif
 
 #if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+#ifndef QT6
 #  define QT6
+#endif
 #endif
 
 #endif // ZCVIDEOWIDGET_GLOBAL_H

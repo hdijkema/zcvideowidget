@@ -94,6 +94,7 @@ private slots:
     void mediaStateChanged(QMediaPlayer::MediaStatus st);
 #ifdef QT6
     void mediaChanged(const QUrl &media);
+    void newAudioOutput();
 #else
     void mediaChanged(const QMediaContent &c);
 #endif

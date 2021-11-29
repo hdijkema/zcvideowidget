@@ -22,16 +22,17 @@ mac: TARGET = libzcvideowidget6
 SOURCES += \
     zcvideodock.cpp \
     zcvideowidget.cpp \
-    zcvideowidgetslider.cpp
+    zcvideowidgetslider.cpp \
+    zcvideowidgetsrtparser.cpp
 
 HEADERS += \
-    srtparser.h \
     zcvideowidget \
     zcvideodock.h \
     zcvideoflags.h \
     zcvideowidget.h \
     zcvideowidget_global.h \
-    zcvideowidgetslider.h
+    zcvideowidgetslider.h \
+    zcvideowidgetsrtparser.h
 
 # Default rules for deployment.
 unix {
