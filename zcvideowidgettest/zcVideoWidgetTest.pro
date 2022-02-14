@@ -2,6 +2,9 @@ QT       += core gui multimedia multimediawidgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
+mac: message(Qt Deployment Target: $$QMAKE_MACOSX_DEPLOYMENT_TARGET)
+mac: QMAKE_APPLE_DEVICE_ARCHS = x86_64 arm64
+
 CONFIG += c++11
 DEFINES += ZCVIDEOWIDGETTEST
 

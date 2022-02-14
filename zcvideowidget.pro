@@ -19,6 +19,9 @@ win32: TARGET = zcvideowidget6
 mac: TARGET = libzcvideowidget6
 }
 
+mac: message(Qt Deployment Target: $$QMAKE_MACOSX_DEPLOYMENT_TARGET)
+mac: QMAKE_APPLE_DEVICE_ARCHS = x86_64 arm64
+
 SOURCES += \
     zcvideodock.cpp \
     zcvideowidget.cpp \
