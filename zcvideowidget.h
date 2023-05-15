@@ -15,6 +15,7 @@
 #include "zcvideoflags.h"
 #include <QWidget>
 #include <QFile>
+#include <QDir>
 
 #ifdef QT6
 #include <QMediaPlayer>
@@ -40,8 +41,43 @@ public:
         virtual ~Prefs() {}
     };
 
+    /**
+     * Beware! If you create a subclass with a QObject for this entry, make sure, you don't
+     * make it autodelete with the parent widget. The zcVideoWidget will be it's parent and
+     * will explicitly delete the object.
+     */
+    class Downloader {
+    public:
+        /* Will download the 'http_url' to 'to_file' and afterwards call vw->videoDownloaded(),
+         * which will start a local play of the given url. This is to overcome the shortcome with MacOS,
+         * that will not play streaming video (Qt 6.5.0). Cleaning up after playing the video, is left
+         * to the programmer using this widget. the downloader can also download .srt files, which
+         * can be set wit vw->setSrt().
+         *
+         * If the video cannot be downloaded, zcVideoWidget should be informed about it using
+         * vw->cannotDownloadVideo()
+         *
+         * returnvalue: false, if download cannot be executed.
+         *
+         * zcVideoWidget will emit an error (signal error(int code)) when the video cannot be downloaded,
+         * or should be downloaded but there's no downloader. Also calling cannotDownloadVideo() will
+         * trigger the emit.
+         *
+         */
+        virtual bool download(QWidget *parent, const QUrl &http_url, const QFile &to_file, zcVideoWidget *vw) = 0;
+
+        /* This function must return a directory. It will be used to make a local file 'to_file' for the download function */
+        virtual QDir downloadDir() = 0;
+    public:
+        virtual ~Downloader() {};
+    };
+
 private:
     zcVideoWidgetData   *D;
+
+public:
+    static const int ERR_NO_DOWNLOADER = 1;
+    static const int ERR_CANNOT_DOWNLOAD = 2;
 
 public:
     // Prefs will be owned and destoyed by this widget
@@ -49,10 +85,18 @@ public:
     explicit zcVideoWidget(int flags, QWidget *parent = nullptr);
     explicit zcVideoWidget(Prefs *p, QWidget *parent = nullptr);
     explicit zcVideoWidget(Prefs *p, int flags, QWidget *parent = nullptr);
+    explicit zcVideoWidget(Downloader *d, QWidget *parent = nullptr);
+    explicit zcVideoWidget(Downloader *d, int flags, QWidget *parent = nullptr);
+    explicit zcVideoWidget(Downloader *d, Prefs *p, int flags, QWidget *parent = nullptr);
     ~zcVideoWidget();
 
 public:
     void setVideo(const QUrl &video_url, bool play, const QString &title = "@@URL@@");
+    QUrl lastVideoUrl();
+
+public:
+    void videoDownloaded();
+    void cannotDownloadVideo();
 
 public:
     bool setSrt(const QFile &file);
@@ -77,6 +121,7 @@ signals:
     void hidden();
     void clickOutside();
     void signalSetVideo();
+    void error(int code);
 
 public slots:
     void play();

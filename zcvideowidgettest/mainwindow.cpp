@@ -3,6 +3,7 @@
 
 #include "zcvideowidget.h"
 #include "zcvideodock.h"
+#include "maindownloader.h"
 
 #include <QFileDialog>
 #include <QInputDialog>
@@ -58,7 +59,6 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-
 void MainWindow::on_actionOpen_Video_triggered()
 {
     if (D->_video_widget) {
@@ -105,7 +105,7 @@ void MainWindow::on_actionDock_Url_triggered()
     QUrl file_url(Url);
     D->_file_url = file_url;
 
-    D->_dock = new zcVideoDock(new MyPref(),
+    D->_dock = new zcVideoDock(new MainDownloader(), new MyPref(),
                             zcVideoFlags::FLAG_KEEP_POSITION_AND_SIZE|
                             zcVideoFlags::FLAG_HIDE_CONTROLS_FULLSCREEN|
                             zcVideoFlags::FLAG_PREVENT_SLEEP_FULLSCREEN
@@ -154,11 +154,16 @@ void MainWindow::on_actionAdd_Video_Frame_triggered()
         QMessageBox::warning(this, "Already there", "The video frame has already been created");
     } else {
         QWidget *w = ui->w_video_plane;
-        D->_video_widget = new zcVideoWidget(w);
+        D->_video_widget = new zcVideoWidget(new MainDownloader(), w);
         QVBoxLayout *vbox = new QVBoxLayout();
         vbox->setContentsMargins(0, 0, 0, 0);
         w->setLayout(vbox);
         vbox->addWidget(D->_video_widget);
+        connect(D->_video_widget, &zcVideoWidget::error, D->_video_widget, [this](int code) {
+            QMessageBox::warning(this, "Cannot download video",
+                                 QString("%1 cannot be downloaded").arg(D->_video_widget->lastVideoUrl().toString())
+                                 );
+        });
     }
 }
 

@@ -20,6 +20,7 @@ SOURCES += \
     ../zcvideowidgetslider.cpp \
     ../zcvideowidgetsrtparser.cpp \
     main.cpp \
+    maindownloader.cpp \
     mainwindow.cpp
 
 HEADERS += \
@@ -29,6 +30,7 @@ HEADERS += \
     ../zcvideowidget_global.h \
     ../zcvideowidgetslider.h \
     ../zcvideowidgetsrtparser.h \
+    maindownloader.h \
     mainwindow.h
 
 FORMS += \

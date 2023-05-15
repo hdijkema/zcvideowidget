@@ -32,6 +32,7 @@
 #include <QTextDocument>
 #include <QLibrary>
 #include <QWindow>
+#include <QTemporaryFile>
 
 #ifdef QT6
 #include <QAudioOutput>
@@ -113,10 +114,11 @@ public:
 
     QString             _title;
     QUrl                _video_url;
+    QFile               _local_file;
     bool                _do_play;
     bool                _set_video;
 
-    QElapsedTimer       _elapsed_since_create;
+    zcVideoWidget::Downloader *_downloader;
 };
 
 class zcGraphicsView : public QGraphicsView
@@ -148,24 +150,33 @@ protected:
 typedef QWidget super;
 
 zcVideoWidget::zcVideoWidget(QWidget *parent)
-  : zcVideoWidget(nullptr, parent)
+  : zcVideoWidget(nullptr, nullptr, 0, parent)
 {}
 
 zcVideoWidget::zcVideoWidget(int flags, QWidget *parent)
-    : zcVideoWidget(nullptr, flags, parent)
+    : zcVideoWidget(nullptr, nullptr, flags, parent)
 {}
 
 zcVideoWidget::zcVideoWidget(zcVideoWidget::Prefs *p, QWidget *parent)
-    : zcVideoWidget(p, 0, parent)
+    : zcVideoWidget(nullptr, p, 0, parent)
 {}
 
-zcVideoWidget::zcVideoWidget(zcVideoWidget::Prefs *p, int flags, QWidget *parent)
+zcVideoWidget::zcVideoWidget(Downloader *d, QWidget *parent)
+    : zcVideoWidget(d, nullptr, 0, parent)
+{}
+
+zcVideoWidget::zcVideoWidget(Downloader *d, int flags, QWidget *parent)
+    : zcVideoWidget(d, nullptr, flags, parent)
+{}
+
+zcVideoWidget::zcVideoWidget(zcVideoWidget::Downloader *d, zcVideoWidget::Prefs *p, int flags, QWidget *parent)
     : QWidget(parent)
 {
     D = new zcVideoWidgetData();
 
     D->_flags = flags;
     D->_prefs = p;
+    D->_downloader = d;
     D->_parent = parent;
     D->_prefs_first = true;
 
@@ -242,7 +253,6 @@ zcVideoWidget::zcVideoWidget(zcVideoWidget::Prefs *p, int flags, QWidget *parent
     D->_scene->addItem(D->_video_item);
     D->_scene->addItem(D->_srt_item);
     D->_scene->addItem(D->_delay_item);
-
 
     D->_slider = new zcVideoWidgetSlider(Qt::Horizontal, this);
     D->_time = new QLabel(this);
@@ -367,13 +377,12 @@ zcVideoWidget::zcVideoWidget(zcVideoWidget::Prefs *p, int flags, QWidget *parent
     setLayout(vbox);
 
     connect(this, &zcVideoWidget::signalSetVideo, this, &zcVideoWidget::execSetVideo, Qt::QueuedConnection);
-
-    D->_elapsed_since_create.start();
 }
 
 zcVideoWidget::~zcVideoWidget()
 {
     if (D->_prefs) { delete D->_prefs; }
+    if (D->_downloader) { delete D->_downloader; }
     delete D;
 }
 
@@ -391,22 +400,50 @@ void zcVideoWidget::setHandleKeys(bool yes)
 void zcVideoWidget::execSetVideo()
 {
     if (D->_set_video) {
-        /*if (D->_elapsed_since_create.elapsed() < 2500) {
-            QTimer::singleShot(1000, this, &zcVideoWidget::execSetVideo);
-            return;
-        }*/
-
         D->_set_video = false;
     #ifdef QT6
-        D->_player->setSource(D->_video_url);
+        if (D->_video_url.isLocalFile()) {
+            D->_player->setSource(D->_video_url);
+        } else {
+            bool oke = false;
+            if (D->_downloader != nullptr) {
+                QString url = D->_video_url.toString();
+                QString filename;
+                int idx = url.lastIndexOf("/");
+                if (idx >= 0) { filename = url.mid(idx + 1); }
+                else { filename = "some_video.vid"; }
+                QDir download_dir(D->_downloader->downloadDir().absolutePath());
+                QString fn = download_dir.absoluteFilePath(filename);
+                QFile video_file(fn);
+                D->_local_file.setFileName(video_file.fileName());
+                oke = D->_downloader->download(this, D->_video_url, D->_local_file, this);
+                if (!oke) { emit error(ERR_CANNOT_DOWNLOAD); }
+            } else {
+                emit error(ERR_NO_DOWNLOADER);
+            }
+            return;
+        }
     #else
         D->_player->setMedia(D->_video_url);
     #endif
-        /*if (D->_do_play) { play(); }
-        else { pause(); }*/
-
+        if (D->_do_play) { play(); }
+        else { pause(); }
         D->_current_srt_text = "";
     }
+}
+
+void zcVideoWidget::videoDownloaded()
+{
+    QUrl u(QUrl::fromLocalFile(D->_local_file.fileName()));
+    D->_player->setSource(u);
+    if (D->_do_play) { play(); }
+    else { pause(); }
+    D->_current_srt_text = "";
+}
+
+void zcVideoWidget::cannotDownloadVideo()
+{
+    emit error(ERR_CANNOT_DOWNLOAD);
 }
 
 void zcVideoWidget::setVideo(const QUrl &video_url, bool do_play, const QString &_title)
@@ -415,7 +452,6 @@ void zcVideoWidget::setVideo(const QUrl &video_url, bool do_play, const QString 
     D->_do_play = do_play;
     D->_title = _title;
     D->_set_video = true;
-    D->_elapsed_since_create.restart();
 
     QString title = D->_title;
     if (title == "@@URL@@") { title = D->_video_url.toString(); }
@@ -431,10 +467,14 @@ void zcVideoWidget::setVideo(const QUrl &video_url, bool do_play, const QString 
         }
     }
 
-
     if (isVisible()) {
         emit signalSetVideo();
     }
+}
+
+QUrl zcVideoWidget::lastVideoUrl()
+{
+    return D->_video_url;
 }
 
 bool zcVideoWidget::setSrt(const QFile &file)

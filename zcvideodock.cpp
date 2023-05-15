@@ -22,26 +22,42 @@ public:
 };
 
 zcVideoDock::zcVideoDock(QWidget *parent, Qt::WindowFlags wflags)
-    : zcVideoDock(nullptr, 0, parent, wflags)
+    : zcVideoDock(nullptr, nullptr, 0, parent, wflags)
 {
 }
 
-zcVideoDock::zcVideoDock(zcVideoWidget::Prefs *p, QWidget *parent, Qt::WindowFlags wflags)
-    : zcVideoDock(p, 0, parent, wflags)
-{}
-
-zcVideoDock::zcVideoDock(int flags, QWidget *parent, Qt::WindowFlags wflags)
-    : zcVideoDock(nullptr, flags, parent, wflags)
+zcVideoDock::zcVideoDock(zcVideoWidget::Downloader *d, QWidget *parent, Qt::WindowFlags wflags)
+    : zcVideoDock(d, nullptr, 0, parent, wflags)
 {}
 
 zcVideoDock::zcVideoDock(zcVideoWidget::Prefs *p, int flags, QWidget *parent, Qt::WindowFlags wflags)
+    : zcVideoDock(nullptr, p, flags, parent, wflags)
+{}
+
+zcVideoDock::zcVideoDock(zcVideoWidget::Prefs *p, QWidget *parent, Qt::WindowFlags wflags)
+    : zcVideoDock(nullptr, p, 0, parent, wflags)
+{}
+
+zcVideoDock::zcVideoDock(int flags, QWidget *parent, Qt::WindowFlags wflags)
+    : zcVideoDock(nullptr, nullptr, flags, parent, wflags)
+{}
+
+zcVideoDock::zcVideoDock(zcVideoWidget::Downloader *d, int flags, QWidget *parent, Qt::WindowFlags wflags)
+    : zcVideoDock(d, nullptr, flags, parent, wflags)
+{}
+
+zcVideoDock::zcVideoDock(zcVideoWidget::Downloader *d, zcVideoWidget::Prefs *p, QWidget *parent, Qt::WindowFlags wflags)
+    : zcVideoDock(d, p, 0, parent, wflags)
+{}
+
+zcVideoDock::zcVideoDock(zcVideoWidget::Downloader *d, zcVideoWidget::Prefs *p, int flags, QWidget *parent, Qt::WindowFlags wflags)
     : QMainWindow(parent, wflags)
 {
     D = new zcVideoDockData();
 
     D->_flags = flags;
     D->_prefs = p;
-    D->_video_widget = new zcVideoWidget(p, flags|zcVideoFlags::FLAG_DOCKED, this);
+    D->_video_widget = new zcVideoWidget(d, p, flags|zcVideoFlags::FLAG_DOCKED, this);
 
     setCentralWidget(D->_video_widget);
 }

@@ -28,6 +28,11 @@ public:
     explicit zcVideoDock(zcVideoWidget::Prefs *p, QWidget *parent = nullptr, Qt::WindowFlags wflags = Qt::WindowFlags());
     explicit zcVideoDock(int flags, QWidget *parent = nullptr, Qt::WindowFlags wflags = Qt::WindowFlags());
     explicit zcVideoDock(QWidget *parent = nullptr, Qt::WindowFlags wflags = Qt::WindowFlags());
+    explicit zcVideoDock(zcVideoWidget::Downloader *d, QWidget *parent = nullptr, Qt::WindowFlags wflags = Qt::WindowFlags());
+    explicit zcVideoDock(zcVideoWidget::Downloader *d, int flags, QWidget *parent = nullptr, Qt::WindowFlags wflags = Qt::WindowFlags());
+    explicit zcVideoDock(zcVideoWidget::Downloader *d, zcVideoWidget::Prefs *p, QWidget *parent = nullptr, Qt::WindowFlags wflags = Qt::WindowFlags());
+    explicit zcVideoDock(zcVideoWidget::Downloader *d, zcVideoWidget::Prefs *p, int flags, QWidget *parent = nullptr, Qt::WindowFlags wflags = Qt::WindowFlags());
+
     // zcVideoWidget::Prefs *p will be owned and deleted by the underlying zcVideoWidget
 
     ~zcVideoDock();
