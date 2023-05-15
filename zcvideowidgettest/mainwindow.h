@@ -23,6 +23,12 @@ private slots:
 
     void on_actionQuit_triggered();
 
+    void on_actionOpen_Url_triggered();
+
+    void on_actionDock_Url_triggered();
+
+    void on_actionAdd_Video_Frame_triggered();
+
 private:
     Ui::MainWindow *ui;
 };

@@ -40,6 +40,7 @@
 #endif
 
 #include <QDebug>
+#include <QElapsedTimer>
 
 #include "zcvideodock.h"
 #include "zcvideowidgetsrtparser.h"
@@ -109,6 +110,13 @@ public:
     bool                 _prefs_first;
 
     QVector<struct Srt> _subtitles;
+
+    QString             _title;
+    QUrl                _video_url;
+    bool                _do_play;
+    bool                _set_video;
+
+    QElapsedTimer       _elapsed_since_create;
 };
 
 class zcGraphicsView : public QGraphicsView
@@ -165,6 +173,7 @@ zcVideoWidget::zcVideoWidget(zcVideoWidget::Prefs *p, int flags, QWidget *parent
 
     D->_propagate_events = false;
     D->_handle_keys = true;
+    D->_set_video = false;
 
     // On OSX When the application is in full screen mode,
     // Playback of video stalls. Don't know why, but
@@ -356,6 +365,10 @@ zcVideoWidget::zcVideoWidget(zcVideoWidget::Prefs *p, int flags, QWidget *parent
     }
 
     setLayout(vbox);
+
+    connect(this, &zcVideoWidget::signalSetVideo, this, &zcVideoWidget::execSetVideo, Qt::QueuedConnection);
+
+    D->_elapsed_since_create.start();
 }
 
 zcVideoWidget::~zcVideoWidget()
@@ -375,31 +388,50 @@ void zcVideoWidget::setHandleKeys(bool yes)
     D->_handle_keys = yes;
 }
 
-void zcVideoWidget::setVideo(const QUrl &video_url, bool do_play, const QString &_title)
+void zcVideoWidget::execSetVideo()
 {
-    QString title;
-    if (_title == "@@URL@@") { title = video_url.toString(); }
-    else { title = _title; }
+    if (D->_set_video) {
+        if (D->_elapsed_since_create.elapsed() < 2500) {
+            QTimer::singleShot(1000, this, &zcVideoWidget::execSetVideo);
+            return;
+        }
 
-    if (D->_flags&zcVideoFlags::FLAG_SOFT_TITLE) {
-        D->_movie_name->setText(title);
-    } else {
-        if (D->_flags&zcVideoFlags::FLAG_DOCKED) {
-            zcVideoDock *w = qobject_cast<zcVideoDock *>(parent());
-            if (w != nullptr) {
-                w->setWindowTitle(title);
+        D->_set_video = false;
+        QString title = D->_title;
+        if (title == "@@URL@@") { title = D->_video_url.toString(); }
+
+        if (D->_flags&zcVideoFlags::FLAG_SOFT_TITLE) {
+            D->_movie_name->setText(title);
+        } else {
+            if (D->_flags&zcVideoFlags::FLAG_DOCKED) {
+                zcVideoDock *w = qobject_cast<zcVideoDock *>(parent());
+                if (w != nullptr) {
+                    w->setWindowTitle(title);
+                }
             }
         }
-    }
-#ifdef QT6
-    D->_player->setSource(video_url);
-#else
-    D->_player->setMedia(video_url);
-#endif
-    if (do_play) { play(); }
-    else { pause(); }
+    #ifdef QT6
+        D->_player->setSource(D->_video_url);
+    #else
+        D->_player->setMedia(D->_video_url);
+    #endif
+        if (D->_do_play) { play(); }
+        else { pause(); }
 
-    D->_current_srt_text = "";
+        D->_current_srt_text = "";
+    }
+}
+
+void zcVideoWidget::setVideo(const QUrl &video_url, bool do_play, const QString &_title)
+{
+    D->_video_url = video_url;
+    D->_do_play = do_play;
+    D->_title = _title;
+    D->_set_video = true;
+
+    if (isVisible()) {
+        emit signalSetVideo();
+    }
 }
 
 bool zcVideoWidget::setSrt(const QFile &file)
@@ -677,7 +709,8 @@ void zcVideoWidget::setVolume(qint64 v)
 #ifdef QT6
     QAudioOutput *ao = const_cast<QAudioOutput *>(D->_player->audioOutput());
     if (ao != nullptr) {
-        ao->setVolume(v);
+        double v_f = (v / 100.0);
+        ao->setVolume(v_f);
         if (ao->isMuted()) {
             D->_mute->setChecked(false);
             ao->setMuted(false);
@@ -1024,6 +1057,8 @@ void zcVideoWidget::showEvent(QShowEvent *event)
 
     adjustSize();
     super::showEvent(event);
+
+    emit signalSetVideo();
 }
 
 void zcVideoWidget::handleDockChange(bool fscr)

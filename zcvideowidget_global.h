@@ -13,13 +13,17 @@
 
 #include <QtCore/qglobal.h>
 
-#ifdef ZCVIDEOWIDGETTEST
+#ifdef ZCVIDEOWIDGET_ZC4
 #  define ZCVIDEOWIDGET_EXPORT
 #else
-#  if defined(ZCVIDEOWIDGET_LIBRARY)
-#    define ZCVIDEOWIDGET_EXPORT Q_DECL_EXPORT
+#  ifdef ZCVIDEOWIDGETTEST
+#    define ZCVIDEOWIDGET_EXPORT
 #  else
-#    define ZCVIDEOWIDGET_EXPORT Q_DECL_IMPORT
+#    if defined(ZCVIDEOWIDGET_LIBRARY)
+#      define ZCVIDEOWIDGET_EXPORT Q_DECL_EXPORT
+#    else
+#      define ZCVIDEOWIDGET_EXPORT Q_DECL_IMPORT
+#    endif
 #  endif
 #endif
 

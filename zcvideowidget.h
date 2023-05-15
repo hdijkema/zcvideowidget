@@ -76,6 +76,7 @@ public:
 signals:
     void hidden();
     void clickOutside();
+    void signalSetVideo();
 
 public slots:
     void play();
@@ -92,6 +93,8 @@ private slots:
     void setVolume(qint64 v);
     void fullScreen(bool yes);
     void mediaStateChanged(QMediaPlayer::MediaStatus st);
+    void execSetVideo();
+
 #ifdef QT6
     void mediaChanged(const QUrl &media);
     void newAudioOutput();

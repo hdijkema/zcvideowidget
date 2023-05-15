@@ -28,6 +28,18 @@
        <string>Video plane</string>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
        <item>
         <widget class="QWidget" name="w_video_plane" native="true"/>
        </item>
@@ -42,14 +54,19 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>31</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuMenu">
     <property name="title">
      <string>Menu</string>
     </property>
+    <addaction name="actionAdd_Video_Frame"/>
+    <addaction name="separator"/>
     <addaction name="actionOpen_Video"/>
+    <addaction name="actionOpen_Url"/>
+    <addaction name="separator"/>
+    <addaction name="actionDock_Url"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -64,6 +81,21 @@
   <action name="actionQuit">
    <property name="text">
     <string>Quit</string>
+   </property>
+  </action>
+  <action name="actionOpen_Url">
+   <property name="text">
+    <string>Open Url</string>
+   </property>
+  </action>
+  <action name="actionDock_Url">
+   <property name="text">
+    <string>Dock Url</string>
+   </property>
+  </action>
+  <action name="actionAdd_Video_Frame">
+   <property name="text">
+    <string>Add Video Frame</string>
    </property>
   </action>
  </widget>
