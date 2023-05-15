@@ -73,7 +73,6 @@ void MainWindow::on_actionOpen_Video_triggered()
     }
 }
 
-
 void MainWindow::on_actionQuit_triggered()
 {
     close();
