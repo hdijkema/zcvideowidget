@@ -313,11 +313,15 @@ zcVideoWidget::zcVideoWidget(zcVideoWidget::Downloader *d, zcVideoWidget::Prefs 
     D->_srt_delay = 0;
 
     D->_fullscreen_block = false;
-    D->_fullscreen = new QToolButton();
-    QAction *fullscr_action = new QAction(st->standardIcon(QStyle::SP_TitleBarMaxButton), tr("Volledig scherm"), this);
-    fullscr_action->setCheckable(true);
-    connect(fullscr_action, &QAction::toggled, this, &zcVideoWidget::fullScreen);
-    D->_fullscreen->setDefaultAction(fullscr_action);
+    if (D->_flags & zcVideoFlags::FLAG_NO_FULL_SCREEN_BUTTON) {
+        D->_fullscreen = nullptr;
+    } else {
+        D->_fullscreen = new QToolButton();
+        QAction *fullscr_action = new QAction(st->standardIcon(QStyle::SP_TitleBarMaxButton), tr("Volledig scherm"), this);
+        fullscr_action->setCheckable(true);
+        connect(fullscr_action, &QAction::toggled, this, &zcVideoWidget::fullScreen);
+        D->_fullscreen->setDefaultAction(fullscr_action);
+    }
 
     auto addSep = [this](QHBoxLayout *hbox) {
         QFrame *line = new QFrame(this);
@@ -517,7 +521,11 @@ void zcVideoWidget::setSrtText(const QString &html_text)
     option.setAlignment(Qt::AlignCenter);
     D->_srt_item->document()->setDefaultTextOption(option);
 
+#ifdef Q_OS_MAC
+    int fontsize_pt = 20;
+#else
     int fontsize_pt = 12;
+#endif
     if (D->_prefs) {
         fontsize_pt = D->_prefs->get(QString("%1.fontsize").arg(name), 20);
     }

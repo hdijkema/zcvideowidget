@@ -18,6 +18,7 @@ public:
     static const int FLAG_SOFT_TITLE                = 0x0001;
     static const int FLAG_HIDE_CONTROLS_FULLSCREEN  = 0x0002;
     static const int FLAG_PREVENT_SLEEP_FULLSCREEN  = 0x0004;
+    static const int FLAG_NO_FULL_SCREEN_BUTTON     = 0x0008;
 
     // zcVideoDock flags
 public:
@@ -25,7 +26,7 @@ public:
 
     // Internal flags
 private:
-    static const int FLAG_DOCKED                    = 0x0002;
+    static const int FLAG_DOCKED                    = 0x0020;
 
 public:
     friend class zcVideoWidget;

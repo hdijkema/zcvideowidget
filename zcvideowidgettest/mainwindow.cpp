@@ -45,13 +45,6 @@ MainWindow::MainWindow(QWidget *parent)
     D = new MainWindowData();
     D->_dock = nullptr;
     D->_video_widget = nullptr;
-
-    /*QWidget *w = ui->w_video_plane;
-    D->_video_widget = new zcVideoWidget(w);
-    QVBoxLayout *vbox = new QVBoxLayout();
-    vbox->setContentsMargins(0, 0, 0, 0);
-    w->setLayout(vbox);
-    vbox->addWidget(D->_video_widget);*/
 }
 
 MainWindow::~MainWindow()
@@ -66,6 +59,7 @@ void MainWindow::on_actionOpen_Video_triggered()
 
         QUrl u(QUrl::fromLocalFile(file));
         D->_video_widget->setVideo(u, true);
+        this->setWindowTitle(u.toString());
 
         QString p = file;
         QRegularExpression re("[.][^.]+$");
@@ -154,14 +148,18 @@ void MainWindow::on_actionAdd_Video_Frame_triggered()
         QMessageBox::warning(this, "Already there", "The video frame has already been created");
     } else {
         QWidget *w = ui->w_video_plane;
-        D->_video_widget = new zcVideoWidget(new MainDownloader(), w);
+        D->_video_widget = new zcVideoWidget(new MainDownloader(),
+                                             zcVideoFlags::FLAG_HIDE_CONTROLS_FULLSCREEN |
+                                             zcVideoFlags::FLAG_NO_FULL_SCREEN_BUTTON,
+                                             w
+                                             );
         QVBoxLayout *vbox = new QVBoxLayout();
         vbox->setContentsMargins(0, 0, 0, 0);
         w->setLayout(vbox);
         vbox->addWidget(D->_video_widget);
         connect(D->_video_widget, &zcVideoWidget::error, D->_video_widget, [this](int code) {
             QMessageBox::warning(this, "Cannot download video",
-                                 QString("%1 cannot be downloaded").arg(D->_video_widget->lastVideoUrl().toString())
+                                 QString("%1 cannot be downloaded (code=%2)").arg(D->_video_widget->lastVideoUrl().toString(), QString::number(code))
                                  );
         });
     }
