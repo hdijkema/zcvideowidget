@@ -391,32 +391,19 @@ void zcVideoWidget::setHandleKeys(bool yes)
 void zcVideoWidget::execSetVideo()
 {
     if (D->_set_video) {
-        if (D->_elapsed_since_create.elapsed() < 2500) {
+        /*if (D->_elapsed_since_create.elapsed() < 2500) {
             QTimer::singleShot(1000, this, &zcVideoWidget::execSetVideo);
             return;
-        }
+        }*/
 
         D->_set_video = false;
-        QString title = D->_title;
-        if (title == "@@URL@@") { title = D->_video_url.toString(); }
-
-        if (D->_flags&zcVideoFlags::FLAG_SOFT_TITLE) {
-            D->_movie_name->setText(title);
-        } else {
-            if (D->_flags&zcVideoFlags::FLAG_DOCKED) {
-                zcVideoDock *w = qobject_cast<zcVideoDock *>(parent());
-                if (w != nullptr) {
-                    w->setWindowTitle(title);
-                }
-            }
-        }
     #ifdef QT6
         D->_player->setSource(D->_video_url);
     #else
         D->_player->setMedia(D->_video_url);
     #endif
-        if (D->_do_play) { play(); }
-        else { pause(); }
+        /*if (D->_do_play) { play(); }
+        else { pause(); }*/
 
         D->_current_srt_text = "";
     }
@@ -428,6 +415,22 @@ void zcVideoWidget::setVideo(const QUrl &video_url, bool do_play, const QString 
     D->_do_play = do_play;
     D->_title = _title;
     D->_set_video = true;
+    D->_elapsed_since_create.restart();
+
+    QString title = D->_title;
+    if (title == "@@URL@@") { title = D->_video_url.toString(); }
+
+    if (D->_flags&zcVideoFlags::FLAG_SOFT_TITLE) {
+        D->_movie_name->setText(title);
+    } else {
+        if (D->_flags&zcVideoFlags::FLAG_DOCKED) {
+            zcVideoDock *w = qobject_cast<zcVideoDock *>(parent());
+            if (w != nullptr) {
+                w->setWindowTitle(title);
+            }
+        }
+    }
+
 
     if (isVisible()) {
         emit signalSetVideo();

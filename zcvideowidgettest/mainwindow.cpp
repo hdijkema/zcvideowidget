@@ -45,12 +45,12 @@ MainWindow::MainWindow(QWidget *parent)
     D->_dock = nullptr;
     D->_video_widget = nullptr;
 
-    QWidget *w = ui->w_video_plane;
+    /*QWidget *w = ui->w_video_plane;
     D->_video_widget = new zcVideoWidget(w);
     QVBoxLayout *vbox = new QVBoxLayout();
     vbox->setContentsMargins(0, 0, 0, 0);
     w->setLayout(vbox);
-    vbox->addWidget(D->_video_widget);
+    vbox->addWidget(D->_video_widget);*/
 }
 
 MainWindow::~MainWindow()

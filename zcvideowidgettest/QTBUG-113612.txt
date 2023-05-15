@@ -1,0 +1,158 @@
+
+Logging during debugging.
+
+12:04:18: Debugging /Users/hans/devel/libs_with_qt/zcvideowidget/build-zcVideoWidgetTest-Qt_6_4_3_for_macOS-Debug/zcVideoWidgetTest.app/Contents/MacOS/zcVideoWidgetTest ...
+got fallback qt version 0x604032023-05-15 12:04:24.335634+0200 zcVideoWidgetTest[8779:308343] Detected system locale encoding (US-ASCII, locale "C") is not UTF-8.
+Qt shall use a UTF-8 locale ("UTF-8") instead. If this causes problems,
+reconfigure your locale. See the locale(1) manual for more information.
+2023-05-15 12:04:24.571607+0200 zcVideoWidgetTest[8779:308343] SecTaskLoadEntitlements failed error=22 cs_flags=20, pid=8779
+2023-05-15 12:04:24.571754+0200 zcVideoWidgetTest[8779:308343] SecTaskCopyDebugDescription: zcVideoWidgetTes[8779]/0#-1 LF=0
+2023-05-15 12:04:30.548498+0200 zcVideoWidgetTest[8779:308343] [plugin] AddInstanceForFactory: No factory registered for id <CFUUID 0x600000244840> F8BB1C28-BAE8-11D6-9C31-00039315CD46
+2023-05-15 12:04:30.583455+0200 zcVideoWidgetTest[8779:308343]  HALC_ShellObject::HasProperty: initial inner method call failed, Error: 560947818 (!obj)
+2023-05-15 12:04:30.583504+0200 zcVideoWidgetTest[8779:308343]  HALC_ShellObject::HasProperty: initial inner method call failed, Error: 560947818 (!obj)
+2023-05-15 12:04:30.587858+0200 zcVideoWidgetTest[8779:308343]  HALC_ShellObject::HasProperty: initial inner method call failed, Error: 560947818 (!obj)
+2023-05-15 12:04:31.262158+0200 zcVideoWidgetTest[8779:308343] [plugin] AddInstanceForFactory: No factory registered for id <CFUUID 0x6000002493c0> 30010C1C-93BF-11D8-8B5B-000A95AF9C6A
+2023-05-15 12:04:31.314543+0200 zcVideoWidgetTest[8779:308343]  HALC_ShellObject::HasProperty: initial inner method call failed, Error: 560947818 (!obj)
+2023-05-15 12:04:31.316518+0200 zcVideoWidgetTest[8779:308343]  HALC_ShellObject::HasProperty: initial inner method call failed, Error: 560947818 (!obj)
+2023-05-15 12:04:35.911429+0200 zcVideoWidgetTest[8779:308343] SecTaskLoadEntitlements failed error=22 cs_flags=20, pid=8779
+2023-05-15 12:04:35.911550+0200 zcVideoWidgetTest[8779:308343] SecTaskCopyDebugDescription: zcVideoWidgetTes[8779]/0#-1 LF=0
+2023-05-15 12:04:37.046820+0200 zcVideoWidgetTest[8779:308466] validateSessionInfo: bundleID is invalid. Please specify the bundleID for kRTCReportingSessionInfoClientBundleID
+2023-05-15 12:04:37.048576+0200 zcVideoWidgetTest[8779:308373] startConfigurationWithCompletionHandler: Failed to get remote object proxy: Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.rtcreportingd" UserInfo={NSDebugDescription=connection to service named com.apple.rtcreportingd}
+2023-05-15 12:04:37.048714+0200 zcVideoWidgetTest[8779:308373] startConfigurationWithCompletionHandler: Failed to get remote object proxy: Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.rtcreportingd" UserInfo={NSDebugDescription=connection to service named com.apple.rtcreportingd}
+2023-05-15 12:04:37.446857+0200 zcVideoWidgetTest[8779:308373] [logging] volume does not support data protection, stripping SQLITE_OPEN_FILEPROTECTION_* flags
+2023-05-15 12:04:37.447362+0200 zcVideoWidgetTest[8779:308373] [logging] volume does not support data protection, stripping SQLITE_OPEN_FILEPROTECTION_* flags
+2023-05-15 12:04:37.493654+0200 zcVideoWidgetTest[8779:308374] SecTaskLoadEntitlements failed error=22 cs_flags=20, pid=8779
+2023-05-15 12:04:37.493774+0200 zcVideoWidgetTest[8779:308374] SecTaskCopyDebugDescription: zcVideoWidgetTes[8779]/0#-1 LF=0
+2023-05-15 12:04:37.493810+0200 zcVideoWidgetTest[8779:308374] SecTaskLoadEntitlements failed error=22 cs_flags=20, pid=8779
+2023-05-15 12:04:37.493851+0200 zcVideoWidgetTest[8779:308374] SecTaskCopyDebugDescription: zcVideoWidgetTes[8779]/0#-1 LF=0
+2023-05-15 12:04:37.657393+0200 zcVideoWidgetTest[8779:308366] [tcp] tcp_output [C3.1:3] flags=[R.] seq=3035323657, ack=2711921430, win=1980 state=CLOSED rcv_nxt=2711921430, snd_una=3035323633
+2023-05-15 12:04:37.872872+0200 zcVideoWidgetTest[8779:308516] sendMessageWithDictionary: Failed to get remote object proxy: Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.rtcreportingd" UserInfo={NSDebugDescription=connection to service named com.apple.rtcreportingd}
+2023-05-15 12:04:37.879972+0200 zcVideoWidgetTest[8779:308512] SecTaskLoadEntitlements failed error=22 cs_flags=20, pid=8779
+2023-05-15 12:04:37.880126+0200 zcVideoWidgetTest[8779:308512] SecTaskCopyDebugDescription: zcVideoWidgetTes[8779]/0#-1 LF=0
+2023-05-15 12:04:37.880159+0200 zcVideoWidgetTest[8779:308512] SecTaskLoadEntitlements failed error=22 cs_flags=20, pid=8779
+2023-05-15 12:04:37.880205+0200 zcVideoWidgetTest[8779:308512] SecTaskCopyDebugDescription: zcVideoWidgetTes[8779]/0#-1 LF=0
+2023-05-15 12:04:37.881913+0200 zcVideoWidgetTest[8779:308512] SecTaskLoadEntitlements failed error=22 cs_flags=20, pid=8779
+2023-05-15 12:04:37.882011+0200 zcVideoWidgetTest[8779:308512] SecTaskCopyDebugDescription: zcVideoWidgetTes[8779]/0#-1 LF=0
+2023-05-15 12:04:37.882043+0200 zcVideoWidgetTest[8779:308512] SecTaskLoadEntitlements failed error=22 cs_flags=20, pid=8779
+2023-05-15 12:04:37.882088+0200 zcVideoWidgetTest[8779:308512] SecTaskCopyDebugDescription: zcVideoWidgetTes[8779]/0#-1 LF=0
+2023-05-15 12:04:38.121464+0200 zcVideoWidgetTest[8779:308512] SecTaskLoadEntitlements failed error=22 cs_flags=20, pid=8779
+2023-05-15 12:04:38.121605+0200 zcVideoWidgetTest[8779:308512] SecTaskCopyDebugDescription: zcVideoWidgetTes[8779]/0#-1 LF=0
+2023-05-15 12:04:38.333030+0200 zcVideoWidgetTest[8779:308513] [logging-persist] cannot open file at line 45530 of [9ff244ce07]
+2023-05-15 12:04:38.333071+0200 zcVideoWidgetTest[8779:308513] [logging-persist] os_unix.c:45530: (0) open(/var/db/DetachedSignatures) - Undefined error: 0
+2023-05-15 12:04:38.334645+0200 zcVideoWidgetTest[8779:308513] [logging-persist] cannot open file at line 45530 of [9ff244ce07]
+2023-05-15 12:04:38.334680+0200 zcVideoWidgetTest[8779:308513] [logging-persist] os_unix.c:45530: (0) open(/var/db/DetachedSignatures) - Undefined error: 0
+2023-05-15 12:04:38.360781+0200 zcVideoWidgetTest[8779:308466] sendMessageWithDictionary: Failed to get remote object proxy: Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.rtcreportingd" UserInfo={NSDebugDescription=connection to service named com.apple.rtcreportingd}
+2023-05-15 12:04:39.268970+0200 zcVideoWidgetTest[8779:308365] sendMessageWithDictionary: Failed to get remote object proxy: Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.rtcreportingd" UserInfo={NSDebugDescription=connection to service named com.apple.rtcreportingd}
+2023-05-15 12:04:47.933392+0200 zcVideoWidgetTest[8779:308583] SecTaskLoadEntitlements failed error=22 cs_flags=20, pid=8779
+2023-05-15 12:04:47.933545+0200 zcVideoWidgetTest[8779:308583] SecTaskCopyDebugDescription: zcVideoWidgetTes[8779]/0#-1 LF=0
+2023-05-15 12:04:47.933603+0200 zcVideoWidgetTest[8779:308583] SecTaskLoadEntitlements failed error=22 cs_flags=20, pid=8779
+2023-05-15 12:04:47.933684+0200 zcVideoWidgetTest[8779:308583] SecTaskCopyDebugDescription: zcVideoWidgetTes[8779]/0#-1 LF=0
+2023-05-15 12:04:47.936144+0200 zcVideoWidgetTest[8779:308583] SecTaskLoadEntitlements failed error=22 cs_flags=20, pid=8779
+2023-05-15 12:04:47.936368+0200 zcVideoWidgetTest[8779:308583] SecTaskCopyDebugDescription: zcVideoWidgetTes[8779]/0#-1 LF=0
+2023-05-15 12:04:47.936410+0200 zcVideoWidgetTest[8779:308583] SecTaskLoadEntitlements failed error=22 cs_flags=20, pid=8779
+2023-05-15 12:04:47.936498+0200 zcVideoWidgetTest[8779:308583] SecTaskCopyDebugDescription: zcVideoWidgetTes[8779]/0#-1 LF=0
+2023-05-15 12:04:47.951559+0200 zcVideoWidgetTest[8779:308585] SecTaskLoadEntitlements failed error=22 cs_flags=20, pid=8779
+2023-05-15 12:04:47.951734+0200 zcVideoWidgetTest[8779:308585] SecTaskCopyDebugDescription: zcVideoWidgetTes[8779]/0#-1 LF=0
+2023-05-15 12:04:47.951792+0200 zcVideoWidgetTest[8779:308585] SecTaskLoadEntitlements failed error=22 cs_flags=20, pid=8779
+2023-05-15 12:04:47.951822+0200 zcVideoWidgetTest[8779:308343] -[NSControlAuxiliary objectForKey:]: unrecognized selector sent to instance 0x600001732900
+2023-05-15 12:04:47.951885+0200 zcVideoWidgetTest[8779:308585] SecTaskCopyDebugDescription: zcVideoWidgetTes[8779]/0#-1 LF=0
+2023-05-15 12:04:47.952610+0200 zcVideoWidgetTest[8779:308585] [aqme]        MEMixerChannel.cpp:1636  client <AudioQueueObject@0x1030b5200; Unknown FigPlayer; [0]; play> got error 2003332927 while sending format information
+2023-05-15 12:04:47.955949+0200 zcVideoWidgetTest[8779:308343] *** Terminating app due to uncaught exception 'NSInvalidArgumentException', reason: '-[NSControlAuxiliary objectForKey:]: unrecognized selector sent to instance 0x600001732900'
+*** First throw call stack:
+(
+        0   CoreFoundation                      0x00007ff8045c7773 __exceptionPreprocess + 242
+        1   libobjc.A.dylib                     0x00007ff804327bc3 objc_exception_throw + 48
+        2   CoreFoundation                      0x00007ff80464c35b -[NSObject(NSObject) __retain_OA] + 0
+        3   CoreFoundation                      0x00007ff80452e535 ___forwarding___ + 1356
+        4   CoreFoundation                      0x00007ff80452df58 _CF_forwarding_prep_0 + 120
+        5   CoreVideo                           0x00007ff80bd40361 CVPixelBufferCreateResolvedAttributesDictionary + 149
+        6   VideoToolbox                        0x00007ff810895af0 VTPixelBufferAttributesMediatorCopyProperty + 484
+        7   AVFCore                             0x00007ff8170fb4a9 -[AVPlayerItem(AVPlayerItemOutputs) _preferredPixelBufferAttributes] + 53
+        8   AVFCore                             0x00007ff8170cef66 __84-[AVPlayer _updateCurrentItemPreferredPixelBufferAttributesAndVideoLayerSuppression]_block_invoke + 76
+        9   libdispatch.dylib                   0x00007ff8042ce317 _dispatch_client_callout + 8
+        10  libdispatch.dylib                   0x00007ff8042db7ee _dispatch_lane_barrier_sync_invoke_and_complete + 60
+        11  AVFCore                             0x00007ff8170cef14 -[AVPlayer _updateCurrentItemPreferredPixelBufferAttributesAndVideoLayerSuppression] + 73
+        12  Foundation                          0x00007ff80537d49d -[__NSObserver _doit:] + 287
+        13  CoreFoundation                      0x00007ff80454173c __CFNOTIFICATIONCENTER_IS_CALLING_OUT_TO_AN_OBSERVER__ + 12
+        14  CoreFoundation                      0x00007ff8045deb32 ___CFXRegistrationPost_block_invoke + 49
+        15  CoreFoundation                      0x00007ff8045deab0 _CFXRegistrationPost + 496
+        16  CoreFoundation                      0x00007ff8045133c8 _CFXNotificationPost + 735
+        17  AVFCore                             0x00007ff8170fb57b -[AVPlayerItem(AVPlayerItemOutputs) _addVideoOutput:] + 195
+        18  AVFCore                             0x00007ff8170fb866 -[AVPlayerItem(AVPlayerItemOutputs) addOutput:] + 264
+        19  libdarwinmediaplugin.dylib          0x000000010f8df4ad libdarwinmediaplugin.dylib + 111789
+        20  libdarwinmediaplugin.dylib          0x000000010f8df2d4 libdarwinmediaplugin.dylib + 111316
+        21  QtCore                              0x00000001022115aa _ZN11QMetaObject8activateEP7QObjectPKS_iPPv + 3994
+        22  libdarwinmediaplugin.dylib          0x000000010f8d3bce libdarwinmediaplugin.dylib + 64462
+        23  QtWidgets                           0x000000010107e9c7 _ZN19QApplicationPrivate13notify_helperEP7QObjectP6QEvent + 247
+        24  QtWidgets                           0x000000010107f90c _ZN12QApplication6notifyEP7QObjectP6QEvent + 508
+        25  QtCore                              0x00000001021c212a _ZN16QCoreApplication15notifyInternal2EP7QObjectP6QEvent + 170
+        26  QtCore                              0x00000001021c337c _ZN23QCoreApplicationPrivate16sendPostedEventsEP7QObjectiP11QThreadData + 1468
+        27  libqcocoa.dylib                     0x0000000105ebe13b qt_plugin_instance + 58987
+        28  libqcocoa.dylib                     0x0000000105ebe84b qt_plugin_instance + 60795
+        29  CoreFoundation                      0x00007ff80454c15b __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__ + 17
+        30  CoreFoundation                      0x00007ff80454c0c3 __CFRunLoopDoSource0 + 180
+        31  CoreFoundation                      0x00007ff80454be3d __CFRunLoopDoSources0 + 242
+        32  CoreFoundation                      0x00007ff80454a858 __CFRunLoopRun + 892
+        33  CoreFoundation                      0x00007ff804549e1c CFRunLoopRunSpecific + 562
+        34  HIToolbox                           0x00007ff80d1f95e6 RunCurrentEventLoopInMode + 292
+        35  HIToolbox                           0x00007ff80d1f934a ReceiveNextEventCommon + 594
+        36  HIToolbox                           0x00007ff80d1f90e5 _BlockUntilNextEventMatchingListInModeWithFilter + 70
+        37  AppKit                              0x00007ff806f83f6d _DPSNextEvent + 927
+        38  AppKit                              0x00007ff806f8262a -[NSApplication(NSEvent) _nextEventMatchingEventMask:untilDate:inMode:dequeue:] + 1394
+        39  AppKit                              0x00007ff806f74cd9 -[NSApplication run] + 586
+        40  libqcocoa.dylib                     0x0000000105ebd753 qt_plugin_instance + 56451
+        41  QtCore                              0x00000001021cb4b6 _ZN10QEventLoop4execE6QFlagsINS_17ProcessEventsFlagEE + 486
+        42  QtCore                              0x00000001021c2725 _ZN16QCoreApplication4execEv + 133
+        43  zcVideoWidgetTest                   0x0000000100021151 main + 81
+        44  dyld                                0x000000010008d52e start + 462
+)
+2023-05-15 12:04:47.956470+0200 zcVideoWidgetTest[8779:308343] [General] An uncaught exception was raised
+2023-05-15 12:04:47.956539+0200 zcVideoWidgetTest[8779:308343] [General] -[NSControlAuxiliary objectForKey:]: unrecognized selector sent to instance 0x600001732900
+2023-05-15 12:04:47.956714+0200 zcVideoWidgetTest[8779:308343] [General] (
+        0   CoreFoundation                      0x00007ff8045c7773 __exceptionPreprocess + 242
+        1   libobjc.A.dylib                     0x00007ff804327bc3 objc_exception_throw + 48
+        2   CoreFoundation                      0x00007ff80464c35b -[NSObject(NSObject) __retain_OA] + 0
+        3   CoreFoundation                      0x00007ff80452e535 ___forwarding___ + 1356
+        4   CoreFoundation                      0x00007ff80452df58 _CF_forwarding_prep_0 + 120
+        5   CoreVideo                           0x00007ff80bd40361 CVPixelBufferCreateResolvedAttributesDictionary + 149
+        6   VideoToolbox                        0x00007ff810895af0 VTPixelBufferAttributesMediatorCopyProperty + 484
+        7   AVFCore                             0x00007ff8170fb4a9 -[AVPlayerItem(AVPlayerItemOutputs) _preferredPixelBufferAttributes] + 53
+        8   AVFCore                             0x00007ff8170cef66 __84-[AVPlayer _updateCurrentItemPreferredPixelBufferAttributesAndVideoLayerSuppression]_block_invoke + 76
+        9   libdispatch.dylib                   0x00007ff8042ce317 _dispatch_client_callout + 8
+        10  libdispatch.dylib                   0x00007ff8042db7ee _dispatch_lane_barrier_sync_invoke_and_complete + 60
+        11  AVFCore                             0x00007ff8170cef14 -[AVPlayer _updateCurrentItemPreferredPixelBufferAttributesAndVideoLayerSuppression] + 73
+        12  Foundation                          0x00007ff80537d49d -[__NSObserver _doit:] + 287
+        13  CoreFoundation                      0x00007ff80454173c __CFNOTIFICATIONCENTER_IS_CALLING_OUT_TO_AN_OBSERVER__ + 12
+        14  CoreFoundation                      0x00007ff8045deb32 ___CFXRegistrationPost_block_invoke + 49
+        15  CoreFoundation                      0x00007ff8045deab0 _CFXRegistrationPost + 496
+        16  CoreFoundation                      0x00007ff8045133c8 _CFXNotificationPost + 735
+        17  AVFCore                             0x00007ff8170fb57b -[AVPlayerItem(AVPlayerItemOutputs) _addVideoOutput:] + 195
+        18  AVFCore                             0x00007ff8170fb866 -[AVPlayerItem(AVPlayerItemOutputs) addOutput:] + 264
+        19  libdarwinmediaplugin.dylib          0x000000010f8df4ad libdarwinmediaplugin.dylib + 111789
+        20  libdarwinmediaplugin.dylib          0x000000010f8df2d4 libdarwinmediaplugin.dylib + 111316
+        21  QtCore                              0x00000001022115aa _ZN11QMetaObject8activateEP7QObjectPKS_iPPv + 3994
+        22  libdarwinmediaplugin.dylib          0x000000010f8d3bce libdarwinmediaplugin.dylib + 64462
+        23  QtWidgets                           0x000000010107e9c7 _ZN19QApplicationPrivate13notify_helperEP7QObjectP6QEvent + 247
+        24  QtWidgets                           0x000000010107f90c _ZN12QApplication6notifyEP7QObjectP6QEvent + 508
+        25  QtCore                              0x00000001021c212a _ZN16QCoreApplication15notifyInternal2EP7QObjectP6QEvent + 170
+        26  QtCore                              0x00000001021c337c _ZN23QCoreApplicationPrivate16sendPostedEventsEP7QObjectiP11QThreadData + 1468
+        27  libqcocoa.dylib                     0x0000000105ebe13b qt_plugin_instance + 58987
+        28  libqcocoa.dylib                     0x0000000105ebe84b qt_plugin_instance + 60795
+        29  CoreFoundation                      0x00007ff80454c15b __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__ + 17
+        30  CoreFoundation                      0x00007ff80454c0c3 __CFRunLoopDoSource0 + 180
+        31  CoreFoundation                      0x00007ff80454be3d __CFRunLoopDoSources0 + 242
+        32  CoreFoundation                      0x00007ff80454a858 __CFRunLoopRun + 892
+        33  CoreFoundation                      0x00007ff804549e1c CFRunLoopRunSpecific + 562
+        34  HIToolbox                           0x00007ff80d1f95e6 RunCurrentEventLoopInMode + 292
+        35  HIToolbox                           0x00007ff80d1f934a ReceiveNextEventCommon + 594
+        36  HIToolbox                           0x00007ff80d1f90e5 _BlockUntilNextEventMatchingListInModeWithFilter + 70
+        37  AppKit                              0x00007ff806f83f6d _DPSNextEvent + 927
+        38  AppKit                              0x00007ff806f8262a -[NSApplication(NSEvent) _nextEventMatchingEventMask:untilDate:inMode:dequeue:] + 1394
+        39  AppKit                              0x00007ff806f74cd9 -[NSApplication run] + 586
+        40  libqcocoa.dylib                     0x0000000105ebd753 qt_plugin_instance + 56451
+        41  QtCore                              0x00000001021cb4b6 _ZN10QEventLoop4execE6QFlagsINS_17ProcessEventsFlagEE + 486
+        42  QtCore                              0x00000001021c2725 _ZN16QCoreApplication4execEv + 133
+        43  zcVideoWidgetTest                   0x0000000100021151 main + 81
+        44  dyld                                0x000000010008d52e start + 462
+)
+libc++abi: terminating with uncaught exception of type NSException
