@@ -31,10 +31,22 @@ MainDownloader::MainDownloader()
 MainDownloader::~MainDownloader()
 {
     if (D) {
-        if (D->_to_file.exists()) { D->_to_file.remove(); }
+        clearCache();
         delete D;
         D = nullptr;
     }
+}
+
+void MainDownloader::clearCache()
+{
+    D->_vw->clearVideo();
+    QDir d(downloadDir());
+    QStringList files(d.entryList(QDir::NoDotAndDotDot | QDir::Files));
+    for(const QString &file : files) {
+        QFile f(d.filePath(file));
+        f.remove();
+    }
+    d.removeRecursively();
 }
 
 bool MainDownloader::download(QWidget *parent, const QUrl &http_url, const QFile &to_file, zcVideoWidget *vw)
@@ -45,11 +57,6 @@ bool MainDownloader::download(QWidget *parent, const QUrl &http_url, const QFile
     D->_vw = vw;
 
     QDir d(downloadDir());
-    QStringList files(d.entryList(QDir::NoDotAndDotDot | QDir::Files));
-    for(const QString &file : files) {
-        QFile f(file);
-        f.remove();
-    }
 
     D->_dlg = new QDialog(parent);
     D->_dlg->setWindowTitle("Downloading video to local cache");

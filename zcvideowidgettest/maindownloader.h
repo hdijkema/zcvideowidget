@@ -17,6 +17,9 @@ public:
 private:
     MainDownloaderData *D;
 
+private:
+    void clearCache();
+
     // Downloader interface
 public:
     bool download(QWidget *parent, const QUrl &http_url, const QFile &to_file, zcVideoWidget *vw);

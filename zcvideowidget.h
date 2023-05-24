@@ -92,7 +92,9 @@ public:
 
 public:
     void setVideo(const QUrl &video_url, bool play, const QString &title = "@@URL@@");
+    void clearVideo();
     QUrl lastVideoUrl();
+    void setTitle(const QString &title);
 
 public:
     void videoDownloaded();

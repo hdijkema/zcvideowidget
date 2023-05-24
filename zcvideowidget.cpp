@@ -388,6 +388,7 @@ zcVideoWidget::~zcVideoWidget()
     if (D->_prefs) { delete D->_prefs; }
     if (D->_downloader) { delete D->_downloader; }
     delete D;
+    D = nullptr;
 }
 
 
@@ -450,6 +451,30 @@ void zcVideoWidget::cannotDownloadVideo()
     emit error(ERR_CANNOT_DOWNLOAD);
 }
 
+void zcVideoWidget::clearVideo()
+{
+    if (D) {
+        D->_player->setSource(QUrl());
+        setTitle("");
+    }
+}
+
+void zcVideoWidget::setTitle(const QString &title)
+{
+    if (D) {
+        if (D->_flags&zcVideoFlags::FLAG_SOFT_TITLE) {
+            D->_movie_name->setText(title);
+        } else {
+            if (D->_flags&zcVideoFlags::FLAG_DOCKED) {
+                zcVideoDock *w = qobject_cast<zcVideoDock *>(parent());
+                if (w != nullptr) {
+                    w->setWindowTitle(title);
+                }
+            }
+        }
+    }
+}
+
 void zcVideoWidget::setVideo(const QUrl &video_url, bool do_play, const QString &_title)
 {
     D->_video_url = video_url;
@@ -460,16 +485,7 @@ void zcVideoWidget::setVideo(const QUrl &video_url, bool do_play, const QString 
     QString title = D->_title;
     if (title == "@@URL@@") { title = D->_video_url.toString(); }
 
-    if (D->_flags&zcVideoFlags::FLAG_SOFT_TITLE) {
-        D->_movie_name->setText(title);
-    } else {
-        if (D->_flags&zcVideoFlags::FLAG_DOCKED) {
-            zcVideoDock *w = qobject_cast<zcVideoDock *>(parent());
-            if (w != nullptr) {
-                w->setWindowTitle(title);
-            }
-        }
-    }
+    setTitle(title);
 
     if (isVisible()) {
         emit signalSetVideo();
