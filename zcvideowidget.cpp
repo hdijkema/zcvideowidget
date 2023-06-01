@@ -385,6 +385,7 @@ zcVideoWidget::zcVideoWidget(zcVideoWidget::Downloader *d, zcVideoWidget::Prefs 
 
 zcVideoWidget::~zcVideoWidget()
 {
+    if (D->_player) { D->_player->setSource(QUrl()); }
     if (D->_prefs) { delete D->_prefs; }
     if (D->_downloader) { delete D->_downloader; }
     delete D;
