@@ -16,6 +16,7 @@
 #include <QWidget>
 #include <QFile>
 #include <QDir>
+#include <QVideoWidget>
 
 #ifdef QT6
 #include <QMediaPlayer>
@@ -69,7 +70,7 @@ public:
         /* This function must return a directory. It will be used to make a local file 'to_file' for the download function */
         virtual QDir downloadDir() = 0;
     public:
-        virtual ~Downloader() {};
+        virtual ~Downloader() {}
     };
 
 private:

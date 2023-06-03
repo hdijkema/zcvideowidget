@@ -33,6 +33,7 @@
 #include <QLibrary>
 #include <QWindow>
 #include <QTemporaryFile>
+#include <QVideoSink>
 
 #ifdef QT6
 #include <QAudioOutput>
@@ -98,12 +99,8 @@ public:
     Qt::WindowStates     _prev_states;
     bool                 _is_fullscreen;
 
-    QGraphicsTextItem   *_srt_item;
-    QGraphicsTextItem   *_delay_item;
-    QGraphicsVideoItem  *_video_item;
-    QGraphicsScene      *_scene;
-    QGraphicsView       *_view;
-    QFont                _srt_font;
+    QVideoWidget        *_video_widget;
+
     QString              _current_srt_text;
     int                  _srt_delay;
 
@@ -119,31 +116,6 @@ public:
     bool                _set_video;
 
     zcVideoWidget::Downloader *_downloader;
-};
-
-class zcGraphicsView : public QGraphicsView
-{
-private:
-    zcVideoWidget *_parent;
-public:
-    zcGraphicsView(zcVideoWidget *parent) : QGraphicsView(parent)
-    {
-        _parent = parent;
-        setMouseTracking(true);
-
-        setFrameShape(NoFrame);
-        setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        setBackgroundBrush(QBrush(Qt::black));
-    }
-
-    // QWidget interface
-protected:
-    virtual void mouseMoveEvent(QMouseEvent *event) override
-    {
-        _parent->mouseAt(mapToParent(event->pos()));
-        QGraphicsView::mouseMoveEvent(event);
-    }
 };
 
 
@@ -215,17 +187,10 @@ zcVideoWidget::zcVideoWidget(zcVideoWidget::Downloader *d, zcVideoWidget::Prefs 
 
     D->_is_fullscreen = false;
 
-#ifdef QT6
     D->_player = new QMediaPlayer(this);
-#else
-    D->_player = new QMediaPlayer(this, QMediaPlayer::VideoSurface);
-    D->_player->setNotifyInterval(100);
-#endif
+    D->_video_widget = new QVideoWidget(this);
+    D->_player->setVideoOutput(D->_video_widget);
 
-    D->_video_item = new QGraphicsVideoItem();
-    D->_player->setVideoOutput(D->_video_item);
-
-#ifdef QT6
     {
         QAudioDevice ad = QMediaDevices::defaultAudioOutput();
         D->_audio_output = new QAudioOutput(this);
@@ -233,26 +198,6 @@ zcVideoWidget::zcVideoWidget(zcVideoWidget::Downloader *d, zcVideoWidget::Prefs 
         D->_player->setAudioOutput(D->_audio_output);
         connect(&D->_devices, &QMediaDevices::audioOutputsChanged, this, &zcVideoWidget::newAudioOutput);
     }
-#endif
-
-    D->_srt_item = new QGraphicsTextItem();
-    QGraphicsDropShadowEffect *e2 = new QGraphicsDropShadowEffect(this);
-    e2->setOffset(1,1);
-    D->_srt_item->setGraphicsEffect(e2);
-
-    D->_delay_item = new QGraphicsTextItem();
-    QGraphicsDropShadowEffect *e3 = new QGraphicsDropShadowEffect(this);
-    e3->setOffset(1,1);
-    D->_delay_item->setGraphicsEffect(e3);
-    D->_delay_item->hide();
-
-    D->_view = new zcGraphicsView(this);
-    D->_scene = new QGraphicsScene();
-    D->_view->setScene(D->_scene);
-
-    D->_scene->addItem(D->_video_item);
-    D->_scene->addItem(D->_srt_item);
-    D->_scene->addItem(D->_delay_item);
 
     D->_slider = new zcVideoWidgetSlider(Qt::Horizontal, this);
     D->_time = new QLabel(this);
@@ -264,11 +209,7 @@ zcVideoWidget::zcVideoWidget(zcVideoWidget::Downloader *d, zcVideoWidget::Prefs 
     connect(D->_player, &QMediaPlayer::durationChanged, this, &zcVideoWidget::setDuration);
     connect(D->_player, &QMediaPlayer::positionChanged, this, &zcVideoWidget::setPosition);
     connect(D->_player, &QMediaPlayer::mediaStatusChanged, this, &zcVideoWidget::mediaStateChanged);
-#ifdef QT6
     connect(D->_player, &QMediaPlayer::sourceChanged, this, &zcVideoWidget::mediaChanged);
-#else
-    connect(D->_player, &QMediaPlayer::currentMediaChanged, this, &zcVideoWidget::mediaChanged);
-#endif
 
     connect(D->_slider, &QSlider::sliderPressed, this, &zcVideoWidget::sliderPressed);
     connect(D->_slider, &QSlider::sliderMoved, this, &zcVideoWidget::showPositionChange);
@@ -358,17 +299,28 @@ zcVideoWidget::zcVideoWidget(zcVideoWidget::Downloader *d, zcVideoWidget::Prefs 
     hbox->addWidget(D->_mute);
     hbox->addWidget(D->_volume, 1);
     addSep(hbox);
-    hbox->addWidget(D->_fullscreen);
+    if (D->_fullscreen) {
+        hbox->addWidget(D->_fullscreen);
+    }
     D->_controls->setLayout(hbox);
 
     setMouseTracking(true);
-    D->_view->setMouseTracking(true);
+    D->_video_widget->setMouseTracking(true);
+    {
+        QObjectList l = D->_video_widget->children();
+        if (l.size() > 0) {
+            QWidget *w = qobject_cast<QWidget *>(l[0]);
+            if (w) {
+                w->setMouseTracking(true);
+            }
+        }
+    }
 
     QVBoxLayout *vbox = new QVBoxLayout();
     if (D->_flags&zcVideoFlags::FLAG_SOFT_TITLE && hbox_title != nullptr) {
         vbox->addLayout(hbox_title);
     }
-    vbox->addWidget(D->_view, 1);
+    vbox->addWidget(D->_video_widget, 1);
     vbox->addWidget(D->_controls);
 
     vbox->setSpacing(0);
@@ -407,7 +359,6 @@ void zcVideoWidget::execSetVideo()
 {
     if (D->_set_video) {
         D->_set_video = false;
-    #ifdef QT6
         if (D->_video_url.isLocalFile()) {
             D->_player->setSource(D->_video_url);
         } else {
@@ -429,9 +380,6 @@ void zcVideoWidget::execSetVideo()
             }
             return;
         }
-    #else
-        D->_player->setMedia(D->_video_url);
-    #endif
         if (D->_do_play) { play(); }
         else { pause(); }
         D->_current_srt_text = "";
@@ -534,10 +482,6 @@ void zcVideoWidget::setSrtText(const QString &html_text)
     if (objn == "") { objn = "default"; }
     QString name = QString("zcVideoWidget.%1").arg(objn);
 
-    QTextOption option = D->_srt_item->document()->defaultTextOption();
-    option.setAlignment(Qt::AlignCenter);
-    D->_srt_item->document()->setDefaultTextOption(option);
-
 #ifdef Q_OS_MAC
     int fontsize_pt = 20;
 #else
@@ -547,9 +491,10 @@ void zcVideoWidget::setSrtText(const QString &html_text)
         fontsize_pt = D->_prefs->get(QString("%1.fontsize").arg(name), 20);
     }
 
-    D->_srt_item->setDefaultTextColor(Qt::white);
-    QString txt = QString("<span style=\"font-size: %1pt;\">%2</span>").arg(QString::number(fontsize_pt), html_text);
-    D->_srt_item->setHtml(txt);
+    QVideoSink *sink = D->_player->videoSink();
+    if (sink) {
+        sink->setSubtitleText(html_text);
+    }
 
     D->_current_srt_text = html_text;
 }
@@ -667,21 +612,15 @@ void zcVideoWidget::setPosition(qint64 pos)
     processSrt(pos);
 }
 
-#ifdef QT6
 void zcVideoWidget::mediaChanged(const QUrl &)
-#else
-void zcVideoWidget::mediaChanged(const QMediaContent &)
-#endif
 {
 }
 
-#ifdef QT6
 void zcVideoWidget::newAudioOutput()
 {
     QAudioDevice dev = QMediaDevices::defaultAudioOutput();
     D->_audio_output->setDevice(dev);
 }
-#endif
 
 void zcVideoWidget::mediaStateChanged(QMediaPlayer::MediaStatus st)
 {
@@ -757,16 +696,12 @@ void zcVideoWidget::mute(bool yes)
 {
     QString myname = (objectName() == "") ? "default" : objectName();
     if (D->_prefs) { D->_prefs->set(QString("zcVideoWidget.%1.muted").arg(myname), yes); }
-#ifdef QT6
     QAudioOutput *ao = const_cast<QAudioOutput *>(D->_player->audioOutput());
     if (ao != nullptr) {
         ao->setMuted(yes);
     } else {
         LINE_DEBUG << "!! audioOutput() == nullptr!";
     }
-#else
-    D->_player->setMuted(yes);
-#endif
 }
 
 void zcVideoWidget::setVolume(qint64 v)
@@ -774,7 +709,6 @@ void zcVideoWidget::setVolume(qint64 v)
     QString myname = (objectName() == "") ? "default" : objectName();
     if (D->_prefs) { D->_prefs->set(QString("zcVideoWidget.%1.volume").arg(myname), static_cast<int>(v)); }
 
-#ifdef QT6
     QAudioOutput *ao = const_cast<QAudioOutput *>(D->_player->audioOutput());
     if (ao != nullptr) {
         double v_f = (v / 100.0);
@@ -785,14 +719,6 @@ void zcVideoWidget::setVolume(qint64 v)
             if (D->_prefs) { D->_prefs->set(QString("zcVideoWidget.%1.muted").arg(myname), false); }
         }
     }
-#else
-    D->_player->setVolume(v);
-    if (D->_player->isMuted()) {
-        D->_mute->setChecked(false);
-        D->_player->setMuted(false);
-        if (D->_prefs) { D->_prefs->set(QString("zcVideoWidget.%1.muted").arg(myname), false); }
-    }
-#endif
 }
 
 #ifdef Q_OS_WIN
@@ -951,21 +877,15 @@ void zcVideoWidget::notifySubtitleDelay()
     if (objn == "") { objn = "default"; }
     QString name = QString("zcVideoWidget.%1").arg(objn);
 
-    QTextOption option = D->_srt_item->document()->defaultTextOption();
-    option.setAlignment(Qt::AlignLeft);
-    D->_delay_item->document()->setDefaultTextOption(option);
-
     int fontsize_pt = 12;
     if (D->_prefs) {
         fontsize_pt = D->_prefs->get(QString("%1.fontsize").arg(name), 20);
     }
 
-    D->_delay_item->setDefaultTextColor(Qt::white);
-    QString txt = QString("<span style=\"font-size: %1pt;\">%2</span>").arg(QString::number(fontsize_pt), text);
-    D->_delay_item->setHtml(txt);
-
-    D->_delay_item->setPos(QPoint(5, 5));
-    D->_delay_item->show();
+    QVideoSink *sink = D->_player->videoSink();
+    if (sink) {
+        sink->setSubtitleText(text);
+    }
 
     D->_delay_timer.setSingleShot(true);
     D->_delay_timer.start(1000);
@@ -974,13 +894,17 @@ void zcVideoWidget::notifySubtitleDelay()
 
 void zcVideoWidget::clearDelayNotification()
 {
-    D->_delay_item->hide();
+    //D->_delay_item->hide();
+    QVideoSink *sink = D->_player->videoSink();
+    if (sink) {
+        sink->setSubtitleText(D->_current_srt_text);
+    }
 }
 
 
 void zcVideoWidget::fullScreen(bool fscr)
 {
-    LINE_DEBUG << fscr << D->_fullscreen_block;
+    //LINE_DEBUG << fscr << D->_fullscreen_block;
     if (!D->_fullscreen_block) {
         fullScreenAct(fscr, true);
     }
@@ -988,17 +912,17 @@ void zcVideoWidget::fullScreen(bool fscr)
 
 void zcVideoWidget::fullScreenAct(bool fscr, bool act)
 {
-    LINE_DEBUG << fscr << act;
+    //LINE_DEBUG << fscr << act;
     if (fscr) {
         if (act) {
             if (D->_flags&zcVideoFlags::FLAG_DOCKED) {
                 zcVideoDock *w = qobject_cast<zcVideoDock *>(parent());
-                LINE_DEBUG << w;
+                //LINE_DEBUG << w;
                 if (w) {
                     doFullScreen(w, fscr);
                 }
             } else {
-                LINE_DEBUG << this;
+                //LINE_DEBUG << this;
                 doFullScreen(this, fscr);
             }
         }
@@ -1013,12 +937,12 @@ void zcVideoWidget::fullScreenAct(bool fscr, bool act)
         if (act) {
             if (D->_flags&zcVideoFlags::FLAG_DOCKED) {
                 zcVideoDock *w = qobject_cast<zcVideoDock *>(parent());
-                LINE_DEBUG << w;
+                //LINE_DEBUG << w;
                 if (w) {
                     doFullScreen(w, fscr);
                 }
             } else {
-                LINE_DEBUG << this;
+                //LINE_DEBUG << this;
                 doFullScreen(this, fscr);
             }
         }
@@ -1039,11 +963,7 @@ void zcVideoWidget::fullScreenAct(bool fscr, bool act)
     adjustSize();
 }
 
-#ifdef QT6
 void zcVideoWidget::enterEvent(QEnterEvent *event)
-#else
-void zcVideoWidget::enterEvent(QEvent *event)
-#endif
 {
     if (D->_propagate_events) {
         releaseMouse();
@@ -1081,6 +1001,7 @@ void zcVideoWidget::closeEvent(QCloseEvent *event)
 
 void zcVideoWidget::adjustSize()
 {
+    /*
     QRect r(D->_view->viewport()->rect());
     D->_scene->setSceneRect(r);
     D->_video_item->setSize(r.size());
@@ -1099,6 +1020,7 @@ void zcVideoWidget::adjustSize()
     if ((height - bheight) < h) { h = height - (bheight * 1.25); }
 
     D->_srt_item->setPos(0, h);
+*/
 }
 
 void zcVideoWidget::showEvent(QShowEvent *event)
@@ -1131,7 +1053,7 @@ void zcVideoWidget::showEvent(QShowEvent *event)
 
 void zcVideoWidget::handleDockChange(bool fscr)
 {
-    LINE_DEBUG << fscr;
+    //LINE_DEBUG << fscr;
 
     fullScreenAct(fscr, false);
 
@@ -1174,7 +1096,8 @@ void zcVideoWidget::mouseAt(QPoint p)
         }
     }
 
-    QRect rr(D->_view->rect());
+    //QRect rr(D->_view->rect());
+    QRect rr(D->_video_widget->rect());
 
     setCursor(Qt::ArrowCursor);
     if (D->_is_fullscreen) {
@@ -1199,6 +1122,7 @@ void zcVideoWidget::mouseAt(QPoint p)
 void zcVideoWidget::mouseMoveEvent(QMouseEvent *event)
 {
     QPoint p = event->pos();
+    //LINE_DEBUG << p;
     mouseAt(p);
     super::mouseMoveEvent(event);
 }
